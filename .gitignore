@@ -10,3 +10,8 @@ project/solution/c_output/test_game_exe
 
 # Ignore Rust target directory
 **target/
+
+starter/c_output/
+
+.DS_Store
+.vscode

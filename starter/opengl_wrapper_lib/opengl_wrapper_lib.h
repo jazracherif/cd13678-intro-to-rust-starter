@@ -1,7 +1,8 @@
 #ifndef OPENGL_WRAPPER_LIB_H
 #define OPENGL_WRAPPER_LIB_H
+#include <GLUT/glut.h>
 
-#include <GLFW/glfw3.h>
+#include "../glfw-3.4/include/GLFW/glfw3.h"
 
 // Structure to represent a sprite
 typedef struct {
