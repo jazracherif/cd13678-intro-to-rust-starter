@@ -41,6 +41,10 @@ Sprite* create_sprite(float x, float y, int width, int height, int r, int g, int
     return sprite;
 }
 
+int test() {
+    return 1;
+}
+
 // Function to render a sprite
 void render_sprite(Sprite *sprite) {
     // Convert sprite position and size to window coordinates

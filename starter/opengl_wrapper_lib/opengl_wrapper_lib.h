@@ -39,4 +39,5 @@ int get_key(GLFWwindow* window, int key);
 // Function to get the window pointer
 GLFWwindow* get_window();
 
+int test();
 #endif // OPENGL_WRAPPER_LIB_H
