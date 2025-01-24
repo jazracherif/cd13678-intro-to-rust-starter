@@ -15,3 +15,5 @@ starter/c_output/
 
 .DS_Store
 .vscode
+
+Cargo.lock

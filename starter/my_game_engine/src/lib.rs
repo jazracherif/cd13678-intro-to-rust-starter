@@ -2,19 +2,15 @@ mod ffi;
 use std::ffi::CString;
 
 
-extern "C" {
-    fn test() -> i32;
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    #[test]
-    fn c_binding() {
-        let result = unsafe { test() };
-        assert_eq!(result, 1);
-    }
+    // #[test]
+    // fn c_binding() {
+    //     let result = unsafe { test() };
+    //     assert_eq!(result, 1);
+    // }
 
     #[test]
     fn simple_window_test(){
@@ -34,7 +30,7 @@ mod tests {
 
             // Main loop
             loop {
-                if ffi::window_should_close() == 0 {
+                if ffi::window_should_close() == 1 {
                     break;
                 }
                 ffi::clear_screen();

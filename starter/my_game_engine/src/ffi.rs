@@ -12,21 +12,22 @@ pub struct Sprite {
     width: usize,
     height: usize,
     color: [c_int; 3], // RGB color
-    x: f64,
-    y: f64 // Position
+    x: f32,
+    y: f32 // Position
 }
+
 
 extern "C" {
 pub fn create_game_window(title:  *const c_char, width: usize, height: usize);
 
 // Function to create a sprite
-pub fn create_sprite(x: f64, y: f64, width: usize, height: usize, r: usize, g: usize, b:usize) -> *mut Sprite;
+pub fn create_sprite(x: f32, y: f32, width: usize, height: usize, r: usize, g: usize, b:usize) -> *mut Sprite;
 
 // Function to render a sprite
 pub fn render_sprite(sprite: *mut Sprite);
 
 // Function to update a sprite position
-pub fn update_sprite_position(sprite: *mut Sprite,  x: f64, y: f64);
+pub fn update_sprite_position(sprite: *mut Sprite,  x: f32, y: f32);
 
 // Function to update the game window
 pub fn update_game_window();
