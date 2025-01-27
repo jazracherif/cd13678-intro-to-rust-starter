@@ -11,9 +11,9 @@ pub const GLFW_KEY_UP: c_int = 265;
 
 #[repr(C)]
 pub struct Sprite {
-    width: i32,
-    height: i32,
-    color: [c_int; 3], // RGB color
+    pub width: i32,
+    pub height: i32,
+    pub color: [c_int; 3], // RGB color
     pub x: f32,
     pub y: f32 // Position
 }

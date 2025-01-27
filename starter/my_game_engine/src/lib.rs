@@ -34,14 +34,7 @@ mod tests {
             ffi::create_game_window(c_ptr, 800, 600);
 
             // Main loop
-            loop {
-                if ffi::window_should_close() == 1 {
-                    break;
-                }
-                // Update the game window
-                ffi::update_game_window();
-                thread::sleep(LOOP_SLEEP_MS);
-            }
+            START_WINDOW_AND_GAME_LOOP!({});
         }
     }
 
@@ -62,20 +55,40 @@ mod tests {
             ffi::create_game_window(c_ptr, 800, 600);
 
             // Create a sprite
-            spawn_sprite!(true, 100.0, 150.0, SPRITE_SIDE, SPRITE_SIDE, 255, 0, 0);
+            SPAWN_SPRITE!(true, 100.0, 150.0, SPRITE_SIDE, SPRITE_SIDE, 255, 0, 0);
 
             // Main loop
-            loop {
-            
-                if ffi::window_should_close() == 1 {
-                    break;
-                }
-                // Update the game window
-                ffi::update_game_window();
+            START_WINDOW_AND_GAME_LOOP!({});
+           
+        }
+    }
 
-                thread::sleep(LOOP_SLEEP_MS);
-              
-            }
+    // Same as test_sprite_rendering but flicker between two colors
+    #[test]
+    #[ignore]
+    fn test_sprite_flicker(){
+
+        let rust_string: String = String::from("RUNNING test_sprite_flicker");
+        let c_string: CString = CString::new(rust_string).expect("CString::new failed");
+        let c_ptr = c_string.into_raw();
+        let mut red = true;
+
+        unsafe {
+      
+            ffi::create_game_window(c_ptr, 800, 600);
+
+            // Create a sprite
+            let sprite = SPAWN_SPRITE!(true, 100.0, 150.0, SPRITE_SIDE, SPRITE_SIDE, 255, 0, 0);
+
+            // Main loop
+            START_WINDOW_AND_GAME_LOOP!(
+                {
+                    red = match red {
+                        true =>  { CHANGE_SPRITE_COLOR!(sprite, 0, 255, 0); false},
+                        false => { CHANGE_SPRITE_COLOR!(sprite, 255, 0, 0); true},
+                    };    
+                }
+            );
         }
     }
 
@@ -99,31 +112,26 @@ mod tests {
 
             ffi::create_game_window(c_ptr, 800, 600);
 
-            let sprite_red = spawn_sprite!(true, 100.0, 150.0, SPRITE_SIDE, SPRITE_SIDE, 255, 0, 0);
-            let sprite_green = spawn_sprite!(false, 200.0, 300.0, SPRITE_SIDE, SPRITE_SIDE, 0, 255, 0);
+            let sprite_red = SPAWN_SPRITE!(true, 100.0, 150.0, SPRITE_SIDE, SPRITE_SIDE, 255, 0, 0);
+            let sprite_green = SPAWN_SPRITE!(false, 200.0, 300.0, SPRITE_SIDE, SPRITE_SIDE, 0, 255, 0);
             
 
             let mut red = true;
             let mut now =  time::Instant::now();
 
             // Main loop: switch between red and green 
-            loop {
-                if ffi::window_should_close() == 1 {
-                    break;
+            START_WINDOW_AND_GAME_LOOP!(
+                {
+                    if now.elapsed() >= switch_sprite_in_ms {
+                        ffi::clear_screen();
+                        red = match red {
+                            true => {ffi::render_sprite(sprite_red); false }
+                            false => {ffi::render_sprite(sprite_green); true }
+                        };
+                        now = time::Instant::now();
+                    }
                 }
-
-                if now.elapsed() >= switch_sprite_in_ms {
-                    ffi::clear_screen();
-                    red = match red {
-                        true => {ffi::render_sprite(sprite_red); false }
-                        false => {ffi::render_sprite(sprite_green); true }
-                    };
-                    now = time::Instant::now();
-                }
-                // Update the game window
-                ffi::update_game_window();
-                thread::sleep(LOOP_SLEEP_MS);
-            }
+            );
         }
     }
 
@@ -134,7 +142,7 @@ mod tests {
     #[test]
     #[ignore]
     fn test_key_presses() {
-        let rust_string: String = String::from("RUNNING: test_key_presses");
+        let rust_string: String = String::from("RUNNING: test_key_presses [LEFT + RIGHT]");
         let c_string: CString = CString::new(rust_string).expect("CString::new failed");
         let c_ptr = c_string.into_raw();
 
@@ -142,32 +150,22 @@ mod tests {
             ffi::create_game_window(c_ptr, 800, 600);
 
             // Create a sprite
-            spawn_sprite!(true, 100.0, 150.0, SPRITE_SIDE, SPRITE_SIDE, 255, 0, 0);
+            SPAWN_SPRITE!(true, 100.0, 150.0, SPRITE_SIDE, SPRITE_SIDE, 255, 0, 0);
 
             let mut key_left_pressed = false;
             let mut key_right_pressed = false;
             // Main loop
-            loop {
-            
-                if ffi::window_should_close() == 1 {
-                    break;
-                }
+            START_WINDOW_AND_GAME_LOOP!(
+                {
+                    ON_KEY_PRESS!(ffi::GLFW_KEY_LEFT, { key_left_pressed = true; });
+                    ON_KEY_PRESS!(ffi::GLFW_KEY_RIGHT, { key_right_pressed = true; });
 
-                if ffi::get_key(ffi::get_window(), ffi::GLFW_KEY_LEFT) == ffi::GLFW_PRESS {
-                    key_left_pressed = true;
+                    if key_left_pressed && key_right_pressed {
+                        ffi::clear_screen();
+                        break;
+                    }
                 }
-                if ffi::get_key(ffi::get_window(), ffi::GLFW_KEY_RIGHT) == ffi::GLFW_PRESS {
-                    key_right_pressed = true;
-                }
-                if key_left_pressed && key_right_pressed {
-                    ffi::clear_screen();
-                    break;
-                }
-                // Update the game window
-                ffi::update_game_window();
-
-                thread::sleep(LOOP_SLEEP_MS);             
-            }
+            );
         }
     }
 
@@ -189,61 +187,32 @@ mod tests {
             ffi::create_game_window(c_ptr, 800, 600);
 
             // Create a sprite
-            let sprite = spawn_sprite!(true, 100.0, 150.0, SPRITE_SIDE, SPRITE_SIDE, 255, 0, 0);
+            let sprite = SPAWN_SPRITE!(true, 100.0, 150.0, SPRITE_SIDE, SPRITE_SIDE, 255, 0, 0);
 
             // Main loop
-            loop {
-            
-                if ffi::window_should_close() == 1 {
-                    break;
-                }
+            START_WINDOW_AND_GAME_LOOP!(
+                {
+                    ON_KEY_PRESS!(ffi::GLFW_KEY_LEFT, {
+                        let new_x = if (*sprite).x < -50.0 { 800.0 } else {(*sprite).x - 1.0 };
+                        MOVE_SPRITE!(true, sprite, new_x, (*sprite).y);
+                    });
 
-                if ffi::get_key(ffi::get_window(), ffi::GLFW_KEY_LEFT) == ffi::GLFW_PRESS {
-                    // println!("Left Key Pressed!");
-                    ffi::clear_screen();
-                    if (*sprite).x < -50.0 {
-                        ffi::update_sprite_position(sprite,  800.0, (*sprite).y);
-                    } else {
-                        ffi::update_sprite_position(sprite,  (*sprite).x - 1.0, (*sprite).y);
-                    }
-                    ffi::render_sprite(sprite);
-                }
-                if ffi::get_key(ffi::get_window(), ffi::GLFW_KEY_RIGHT) == ffi::GLFW_PRESS {
-                    ffi::clear_screen();
-                    // println!("Right Key Pressed!");
-                    if (*sprite).x > 800.0 {
-                        ffi::update_sprite_position(sprite,  -50.0, (*sprite).y);
-                    } else {
-                        ffi::update_sprite_position(sprite,  (*sprite).x + 1.0, (*sprite).y);
-                    }
-                    ffi::render_sprite(sprite);
-                }
-                if ffi::get_key(ffi::get_window(), ffi::GLFW_KEY_UP) == ffi::GLFW_PRESS {
-                    // println!("UP Key Pressed!");
-                    ffi::clear_screen();
-                    if (*sprite).y == -50.0 {
-                        ffi::update_sprite_position(sprite,  (*sprite).x, 600.0);
-                    } else {
-                        ffi::update_sprite_position(sprite,  (*sprite).x, (*sprite).y - 1.0);
-                    }
-                    ffi::render_sprite(sprite);
-                }
-                if ffi::get_key(ffi::get_window(), ffi::GLFW_KEY_DOWN) == ffi::GLFW_PRESS {
-                    ffi::clear_screen();
-                    // println!("DOWN Key Pressed!");
-                    if (*sprite).y > 600.0 {
-                        ffi::update_sprite_position(sprite,  (*sprite).x, -50.0);
-                    } else {
-                        ffi::update_sprite_position(sprite,  (*sprite).x, (*sprite).y + 1.0);
-                    }
-                    ffi::render_sprite(sprite);
-                }
+                    ON_KEY_PRESS!(ffi::GLFW_KEY_RIGHT, {
+                        let new_x = if (*sprite).x > 800.0 { -50.0 } else {(*sprite).x + 1.0 };
+                        MOVE_SPRITE!(true, sprite, new_x, (*sprite).y);
+                    });
 
-                // Update the game window
-                ffi::update_game_window();
+                    ON_KEY_PRESS!(ffi::GLFW_KEY_UP, {
+                        let new_y = if (*sprite).y == -50.0 { 600.0 } else {(*sprite).y - 1.0 };
+                        MOVE_SPRITE!(true, sprite, (*sprite).x, new_y);
+                    });
 
-                thread::sleep(LOOP_SLEEP_MS);             
-            }
+                    ON_KEY_PRESS!(ffi::GLFW_KEY_DOWN, {
+                        let new_y = if (*sprite).y > 600.0 { -50.0 } else {(*sprite).y + 1.0 };
+                        MOVE_SPRITE!(true, sprite, (*sprite).x, new_y);
+                    });
+                }
+            );
         }
     }
 }
