@@ -1,7 +1,9 @@
 use std::os::raw::{c_char, c_int};
+use std::ffi::c_void;
 
 pub const GLFW_PRESS: c_int = 1;
 pub const GLFW_KEY_SPACE: c_int = 32;
+
 pub const GLFW_KEY_RIGHT: c_int = 262;
 pub const GLFW_KEY_LEFT: c_int = 263;
 pub const GLFW_KEY_DOWN: c_int = 264;
@@ -9,19 +11,19 @@ pub const GLFW_KEY_UP: c_int = 265;
 
 #[repr(C)]
 pub struct Sprite {
-    width: usize,
-    height: usize,
+    width: i32,
+    height: i32,
     color: [c_int; 3], // RGB color
-    x: f32,
-    y: f32 // Position
+    pub x: f32,
+    pub y: f32 // Position
 }
 
 
 extern "C" {
-pub fn create_game_window(title:  *const c_char, width: usize, height: usize);
+pub fn create_game_window(title:  *const c_char, width: i32, height: i32);
 
 // Function to create a sprite
-pub fn create_sprite(x: f32, y: f32, width: usize, height: usize, r: usize, g: usize, b:usize) -> *mut Sprite;
+pub fn create_sprite(x: f32, y: f32, width: i32, height: i32, r: i32, g: i32, b:i32) -> *mut Sprite;
 
 // Function to render a sprite
 pub fn render_sprite(sprite: *mut Sprite);
@@ -36,12 +38,12 @@ pub fn update_game_window();
 pub fn clear_screen();
 
 // Function to check if the window should close
-pub fn window_should_close() -> usize;
+pub fn window_should_close() -> i32;
 
 // // Function to get key state
-// fn get_key(GLFWwindow* window, int key) -> usize;
+pub fn get_key(window: *mut c_void, key: i32) -> i32;
 
 // // Function to get the window pointer
-// GLFWwindow* get_window();
+pub fn get_window() -> *mut c_void ;
 
 }
