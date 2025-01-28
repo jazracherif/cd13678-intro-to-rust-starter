@@ -18,7 +18,7 @@ pub struct Window {
 
 pub struct Snake {
     body: VecDeque<*mut ffi::Sprite>,
-    speed: f32,
+    speed: f32, // pixel per time tick
     direction: Direction,
     window: Window,
 }
@@ -33,6 +33,67 @@ pub trait Movement {
     // Shrink from the tail end
     fn shrink(&mut self);
 }
+
+macro_rules! SPRITE_ATTR {
+    ($sprite:ident, $attr:ident) => {
+        (*$sprite).$attr
+    };
+}
+
+macro_rules! SPRITE_X {
+    ($sprite:ident ) => {
+        SPRITE_ATTR!($sprite, x)
+    };
+}
+
+macro_rules! SPRITE_Y {
+    ($sprite:ident) => {
+        SPRITE_ATTR!($sprite, y)
+    };
+}
+
+// going beyoung the *left* boundary
+// should take us to the right side of the window
+macro_rules! GO_LEFT {
+    ($sprite:ident, $window:expr, $speed:expr) => {
+        if SPRITE_X!($sprite) < - $window.sprite_side as f32 {
+            $window.width as f32
+        } else {
+            SPRITE_X!($sprite) - 1.0 * $speed 
+        }
+    };
+}
+
+macro_rules! GO_RIGHT {
+    ($sprite:ident, $window:expr, $speed:expr) => {
+        if SPRITE_X!($sprite) > $window.width as f32 { 
+            - $window.sprite_side as f32 
+        } else {
+            SPRITE_X!($sprite) + 1.0 * $speed 
+        }
+    };
+}
+
+macro_rules! GO_UP {
+    ($sprite:ident, $window:expr, $speed:expr) => {
+        if SPRITE_Y!($sprite) == - $window.sprite_side as f32 { 
+            $window.height as f32
+        } else {
+            SPRITE_Y!($sprite) - 1.0 * $speed 
+        }
+    };
+}
+
+macro_rules! GO_DOWN {
+    ($sprite:ident, $window:expr, $speed:expr) => {
+        if SPRITE_Y!($sprite) > $window.height as f32 { 
+            - $window.sprite_side as f32
+        } else {
+            SPRITE_Y!($sprite) + 1.0 * $speed 
+        }
+    };
+}
+
 
 impl Snake {
     // Public Methods
@@ -81,20 +142,21 @@ impl Snake {
         unsafe {
             let new_head = match self.direction {
                 Direction::LEFT => { 
-                    let new_x = if (*sprite).x < -self.window.sprite_side as f32 { self.window.width as f32} else {(*sprite).x - 1.0 };              
-                    DUPE_SPRITE!(sprite , new_x , (*sprite).y)
+                    // let new_x = if SPRITE_X!(sprite) < -self.window.sprite_side as f32 { self.window.width as f32} else {SPRITE_X!(sprite)- 1.0 * self.speed };
+                    let new_x = GO_LEFT!(sprite, self.window, self.speed);
+                    DUPE_SPRITE!(sprite , new_x , SPRITE_Y!(sprite))
                 },
                 Direction::RIGHT => { 
-                    let new_x = if (*sprite).x > self.window.width as f32 { -self.window.sprite_side as f32 } else {(*sprite).x + 1.0 };
-                    DUPE_SPRITE!(sprite , new_x, (*sprite).y ) 
+                    let new_x = GO_RIGHT!(sprite, self.window, self.speed);
+                    DUPE_SPRITE!(sprite , new_x, SPRITE_Y!(sprite) )
                 },
                 Direction::UP => { 
-                    let new_y = if (*sprite).y == -self.window.sprite_side as f32 { self.window.height as f32 } else {(*sprite).y - 1.0 };
-                    DUPE_SPRITE!(sprite , (*sprite).x , new_y ) 
+                    let new_y = GO_UP!(sprite, self.window, self.speed);
+                    DUPE_SPRITE!(sprite , SPRITE_X!(sprite) , new_y )
                 },
                 Direction::DOWN => { 
-                    let new_y = if (*sprite).y > self.window.height as f32 { -self.window.sprite_side as f32 } else {(*sprite).y + 1.0 };
-                    DUPE_SPRITE!(sprite , (*sprite).x , new_y) 
+                    let new_y = GO_DOWN!(sprite, self.window, self.speed);
+                    DUPE_SPRITE!(sprite , SPRITE_X!(sprite) , new_y)
                 },
             };
 
