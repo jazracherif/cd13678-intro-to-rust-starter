@@ -4,7 +4,7 @@
 #[macro_export]
 macro_rules! SPAWN_SPRITE {
     ($render:literal, $($x:expr),*) => {
-            {
+        {
             let sprite = ffi::create_sprite( $($x),* );
             if $render {
                 ffi::render_sprite(sprite);
@@ -14,6 +14,21 @@ macro_rules! SPAWN_SPRITE {
     };
 }
 
+#[macro_export]
+macro_rules! DUPE_SPRITE {
+    ($sprite:ident, $x:expr, $y:expr) => {
+        { 
+            SPAWN_SPRITE!(false, 
+                $x, 
+                $y,
+                (*$sprite).width, 
+                (*$sprite).height, 
+                (*$sprite).color[0],  
+                (*$sprite).color[1],  
+                (*$sprite).color[2]) 
+        }
+    };
+}
 /// move a sprite to a new position, potentially clearing screen first
 /// and then rendering the sprite
 #[macro_export]
@@ -67,7 +82,7 @@ macro_rules! CHANGE_SPRITE_COLOR {
 
 #[macro_export]
 macro_rules! START_WINDOW_AND_GAME_LOOP {
-    ($loop_block:block) => {
+    ($sleepms:expr, $loop_block:block) => {
         loop {
             if ffi::window_should_close() == 1 {
                 break;
@@ -75,7 +90,7 @@ macro_rules! START_WINDOW_AND_GAME_LOOP {
 
             $loop_block
 
-            TICK!(LOOP_SLEEP_MS);
+            TICK!($sleepms);
         }
     };
 }

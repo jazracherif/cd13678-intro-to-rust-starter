@@ -1,8 +1,9 @@
-mod ffi;
+pub mod ffi;
+pub mod game_macros;
+
 use std::ffi::CString;
 use std::{thread, time};
 
-mod game_macros;
 
 #[cfg(test)]
 mod tests {
@@ -34,7 +35,7 @@ mod tests {
             ffi::create_game_window(c_ptr, 800, 600);
 
             // Main loop
-            START_WINDOW_AND_GAME_LOOP!({});
+            START_WINDOW_AND_GAME_LOOP!(LOOP_SLEEP_MS, {});
         }
     }
 
@@ -58,7 +59,7 @@ mod tests {
             SPAWN_SPRITE!(true, 100.0, 150.0, SPRITE_SIDE, SPRITE_SIDE, 255, 0, 0);
 
             // Main loop
-            START_WINDOW_AND_GAME_LOOP!({});
+            START_WINDOW_AND_GAME_LOOP!(LOOP_SLEEP_MS, {});
            
         }
     }
@@ -81,7 +82,7 @@ mod tests {
             let sprite = SPAWN_SPRITE!(true, 100.0, 150.0, SPRITE_SIDE, SPRITE_SIDE, 255, 0, 0);
 
             // Main loop
-            START_WINDOW_AND_GAME_LOOP!(
+            START_WINDOW_AND_GAME_LOOP!(LOOP_SLEEP_MS,
                 {
                     red = match red {
                         true =>  { CHANGE_SPRITE_COLOR!(sprite, 0, 255, 0); false},
@@ -120,7 +121,7 @@ mod tests {
             let mut now =  time::Instant::now();
 
             // Main loop: switch between red and green 
-            START_WINDOW_AND_GAME_LOOP!(
+            START_WINDOW_AND_GAME_LOOP!(LOOP_SLEEP_MS,
                 {
                     if now.elapsed() >= switch_sprite_in_ms {
                         ffi::clear_screen();
@@ -155,7 +156,7 @@ mod tests {
             let mut key_left_pressed = false;
             let mut key_right_pressed = false;
             // Main loop
-            START_WINDOW_AND_GAME_LOOP!(
+            START_WINDOW_AND_GAME_LOOP!(LOOP_SLEEP_MS, 
                 {
                     ON_KEY_PRESS!(ffi::GLFW_KEY_LEFT, { key_left_pressed = true; });
                     ON_KEY_PRESS!(ffi::GLFW_KEY_RIGHT, { key_right_pressed = true; });
@@ -190,7 +191,7 @@ mod tests {
             let sprite = SPAWN_SPRITE!(true, 100.0, 150.0, SPRITE_SIDE, SPRITE_SIDE, 255, 0, 0);
 
             // Main loop
-            START_WINDOW_AND_GAME_LOOP!(
+            START_WINDOW_AND_GAME_LOOP!(LOOP_SLEEP_MS,
                 {
                     ON_KEY_PRESS!(ffi::GLFW_KEY_LEFT, {
                         let new_x = if (*sprite).x < -50.0 { 800.0 } else {(*sprite).x - 1.0 };
