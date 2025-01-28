@@ -1,5 +1,4 @@
 
-
 /// Create a sprite and rended it on the screen
 #[macro_export]
 macro_rules! SPAWN_SPRITE {
@@ -92,5 +91,37 @@ macro_rules! START_WINDOW_AND_GAME_LOOP {
 
             TICK!($sleepms);
         }
+    };
+}
+
+
+#[macro_export]
+macro_rules! C_STRING {
+    ($string_expr:expr) => {
+        {
+            CString::new(String::from($string_expr)).expect("CString::new failed").into_raw()
+        }
+    };
+}
+
+
+#[macro_export]
+macro_rules! SPRITE_ATTR {
+    ($sprite:ident, $attr:ident) => {
+        (*$sprite).$attr
+    };
+}
+
+#[macro_export]
+macro_rules! SPRITE_X {
+    ($sprite:ident ) => {
+        SPRITE_ATTR!($sprite, x)
+    };
+}
+
+#[macro_export]
+macro_rules! SPRITE_Y {
+    ($sprite:ident) => {
+        SPRITE_ATTR!($sprite, y)
     };
 }

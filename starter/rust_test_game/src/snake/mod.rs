@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
 
 use crate::ffi;
-use my_game_engine::{ON_KEY_PRESS, DUPE_SPRITE, MOVE_SPRITE, SPAWN_SPRITE};
+use my_game_engine::{ON_KEY_PRESS, DUPE_SPRITE, SPAWN_SPRITE, SPRITE_X, SPRITE_Y, SPRITE_ATTR};
 
 pub enum Direction {
     UP,
@@ -34,23 +34,6 @@ pub trait Movement {
     fn shrink(&mut self);
 }
 
-macro_rules! SPRITE_ATTR {
-    ($sprite:ident, $attr:ident) => {
-        (*$sprite).$attr
-    };
-}
-
-macro_rules! SPRITE_X {
-    ($sprite:ident ) => {
-        SPRITE_ATTR!($sprite, x)
-    };
-}
-
-macro_rules! SPRITE_Y {
-    ($sprite:ident) => {
-        SPRITE_ATTR!($sprite, y)
-    };
-}
 
 // going beyoung the *left* boundary
 // should take us to the right side of the window

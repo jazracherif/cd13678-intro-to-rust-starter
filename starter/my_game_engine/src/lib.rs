@@ -25,14 +25,10 @@ mod tests {
     #[test]
     #[ignore]
     fn test_simple_game_loop(){
-
-        let rust_string: String = String::from("RUNNING test_simple_game_loop");
-        let c_string: CString = CString::new(rust_string).expect("CString::new failed");
-        let c_ptr = c_string.into_raw();
-
+        let title = C_STRING!("RUNNING test_simple_game_loop");
         unsafe {
 
-            ffi::create_game_window(c_ptr, 800, 600);
+            ffi::create_game_window(title, 800, 600);
 
             // Main loop
             START_WINDOW_AND_GAME_LOOP!(LOOP_SLEEP_MS, {});
@@ -46,14 +42,11 @@ mod tests {
     #[test]
     #[ignore]
     fn test_sprite_rendering(){
-
-        let rust_string: String = String::from("RUNNING test_sprite_rendering");
-        let c_string: CString = CString::new(rust_string).expect("CString::new failed");
-        let c_ptr = c_string.into_raw();
+        let title = C_STRING!("RUNNING test_sprite_rendering");
 
         unsafe {
       
-            ffi::create_game_window(c_ptr, 800, 600);
+            ffi::create_game_window(title, WINDOW_WIDTH, WINDOW_HEIGHT);
 
             // Create a sprite
             SPAWN_SPRITE!(true, 100.0, 150.0, SPRITE_SIDE, SPRITE_SIDE, 255, 0, 0);
@@ -68,15 +61,13 @@ mod tests {
     #[test]
     #[ignore]
     fn test_sprite_flicker(){
+        let title = C_STRING!("RUNNING test_sprite_rendering");
 
-        let rust_string: String = String::from("RUNNING test_sprite_flicker");
-        let c_string: CString = CString::new(rust_string).expect("CString::new failed");
-        let c_ptr = c_string.into_raw();
         let mut red = true;
 
         unsafe {
       
-            ffi::create_game_window(c_ptr, 800, 600);
+            ffi::create_game_window(title, WINDOW_WIDTH, WINDOW_HEIGHT);
 
             // Create a sprite
             let sprite = SPAWN_SPRITE!(true, 100.0, 150.0, SPRITE_SIDE, SPRITE_SIDE, 255, 0, 0);
@@ -103,15 +94,13 @@ mod tests {
     #[test]
     #[ignore]
     fn test_screen_clearing(){
-        let rust_string: String = String::from("RUNNING: test_screen_clearing");
-        let c_string: CString = CString::new(rust_string).expect("CString::new failed");
-        let c_ptr = c_string.into_raw();
+        let title: *mut u8 = C_STRING!("RUNNING: test_screen_clearing");
 
-        let switch_sprite_in_ms = time::Duration::from_millis(2000);
+        let switch_sprite_in_ms = time::Duration::from_millis(500);
 
         unsafe {
 
-            ffi::create_game_window(c_ptr, 800, 600);
+            ffi::create_game_window(title, WINDOW_WIDTH, WINDOW_HEIGHT);
 
             let sprite_red = SPAWN_SPRITE!(true, 100.0, 150.0, SPRITE_SIDE, SPRITE_SIDE, 255, 0, 0);
             let sprite_green = SPAWN_SPRITE!(false, 200.0, 300.0, SPRITE_SIDE, SPRITE_SIDE, 0, 255, 0);
@@ -143,12 +132,10 @@ mod tests {
     #[test]
     #[ignore]
     fn test_key_presses() {
-        let rust_string: String = String::from("RUNNING: test_key_presses [LEFT + RIGHT]");
-        let c_string: CString = CString::new(rust_string).expect("CString::new failed");
-        let c_ptr = c_string.into_raw();
+        let title: *mut u8 = C_STRING!("RUNNING: test_key_presses - [ PRESS LEFT + RIGHT]");
 
         unsafe {
-            ffi::create_game_window(c_ptr, 800, 600);
+            ffi::create_game_window(title, WINDOW_WIDTH, WINDOW_HEIGHT);
 
             // Create a sprite
             SPAWN_SPRITE!(true, 100.0, 150.0, SPRITE_SIDE, SPRITE_SIDE, 255, 0, 0);
@@ -179,13 +166,11 @@ mod tests {
     #[test]
     #[ignore]
     fn test_sprite_position_update() {
-        let rust_string: String = String::from("RUNNING: test_sprite_position_update");
-        let c_string: CString = CString::new(rust_string).expect("CString::new failed");
-        let c_ptr = c_string.into_raw();
+        let title: *mut u8 = C_STRING!("RUNNING: test_sprite_position_update - [MOVE AROUND]");
 
         unsafe {
       
-            ffi::create_game_window(c_ptr, 800, 600);
+            ffi::create_game_window(title, WINDOW_WIDTH, WINDOW_HEIGHT);
 
             // Create a sprite
             let sprite = SPAWN_SPRITE!(true, 100.0, 150.0, SPRITE_SIDE, SPRITE_SIDE, 255, 0, 0);
