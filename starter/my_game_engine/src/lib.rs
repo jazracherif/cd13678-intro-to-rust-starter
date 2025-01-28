@@ -1,4 +1,4 @@
-pub mod ffi;
+pub mod game_ffi;
 pub mod game_macros;
 
 use std::ffi::CString;
@@ -28,7 +28,7 @@ mod tests {
         let title = C_STRING!("RUNNING test_simple_game_loop");
         unsafe {
 
-            ffi::create_game_window(title, 800, 600);
+            game_ffi::create_game_window(title, 800, 600);
 
             // Main loop
             START_WINDOW_AND_GAME_LOOP!(LOOP_SLEEP_MS, {});
@@ -46,7 +46,7 @@ mod tests {
 
         unsafe {
       
-            ffi::create_game_window(title, WINDOW_WIDTH, WINDOW_HEIGHT);
+            game_ffi::create_game_window(title, WINDOW_WIDTH, WINDOW_HEIGHT);
 
             // Create a sprite
             SPAWN_SPRITE!(true, 100.0, 150.0, SPRITE_SIDE, SPRITE_SIDE, 255, 0, 0);
@@ -67,7 +67,7 @@ mod tests {
 
         unsafe {
       
-            ffi::create_game_window(title, WINDOW_WIDTH, WINDOW_HEIGHT);
+            game_ffi::create_game_window(title, WINDOW_WIDTH, WINDOW_HEIGHT);
 
             // Create a sprite
             let sprite = SPAWN_SPRITE!(true, 100.0, 150.0, SPRITE_SIDE, SPRITE_SIDE, 255, 0, 0);
@@ -100,7 +100,7 @@ mod tests {
 
         unsafe {
 
-            ffi::create_game_window(title, WINDOW_WIDTH, WINDOW_HEIGHT);
+            game_ffi::create_game_window(title, WINDOW_WIDTH, WINDOW_HEIGHT);
 
             let sprite_red = SPAWN_SPRITE!(true, 100.0, 150.0, SPRITE_SIDE, SPRITE_SIDE, 255, 0, 0);
             let sprite_green = SPAWN_SPRITE!(false, 200.0, 300.0, SPRITE_SIDE, SPRITE_SIDE, 0, 255, 0);
@@ -113,10 +113,10 @@ mod tests {
             START_WINDOW_AND_GAME_LOOP!(LOOP_SLEEP_MS,
                 {
                     if now.elapsed() >= switch_sprite_in_ms {
-                        ffi::clear_screen();
+                        game_ffi::clear_screen();
                         red = match red {
-                            true => {ffi::render_sprite(sprite_red); false }
-                            false => {ffi::render_sprite(sprite_green); true }
+                            true => {game_ffi::render_sprite(sprite_red); false }
+                            false => {game_ffi::render_sprite(sprite_green); true }
                         };
                         now = time::Instant::now();
                     }
@@ -135,7 +135,7 @@ mod tests {
         let title: *mut u8 = C_STRING!("RUNNING: test_key_presses - [ PRESS LEFT + RIGHT]");
 
         unsafe {
-            ffi::create_game_window(title, WINDOW_WIDTH, WINDOW_HEIGHT);
+            game_ffi::create_game_window(title, WINDOW_WIDTH, WINDOW_HEIGHT);
 
             // Create a sprite
             SPAWN_SPRITE!(true, 100.0, 150.0, SPRITE_SIDE, SPRITE_SIDE, 255, 0, 0);
@@ -145,11 +145,11 @@ mod tests {
             // Main loop
             START_WINDOW_AND_GAME_LOOP!(LOOP_SLEEP_MS, 
                 {
-                    ON_KEY_PRESS!(ffi::GLFW_KEY_LEFT, { key_left_pressed = true; });
-                    ON_KEY_PRESS!(ffi::GLFW_KEY_RIGHT, { key_right_pressed = true; });
+                    ON_KEY_PRESS!(game_ffi::GLFW_KEY_LEFT, { key_left_pressed = true; });
+                    ON_KEY_PRESS!(game_ffi::GLFW_KEY_RIGHT, { key_right_pressed = true; });
 
                     if key_left_pressed && key_right_pressed {
-                        ffi::clear_screen();
+                        game_ffi::clear_screen();
                         break;
                     }
                 }
@@ -170,7 +170,7 @@ mod tests {
 
         unsafe {
       
-            ffi::create_game_window(title, WINDOW_WIDTH, WINDOW_HEIGHT);
+            game_ffi::create_game_window(title, WINDOW_WIDTH, WINDOW_HEIGHT);
 
             // Create a sprite
             let sprite = SPAWN_SPRITE!(true, 100.0, 150.0, SPRITE_SIDE, SPRITE_SIDE, 255, 0, 0);
@@ -178,22 +178,22 @@ mod tests {
             // Main loop
             START_WINDOW_AND_GAME_LOOP!(LOOP_SLEEP_MS,
                 {
-                    ON_KEY_PRESS!(ffi::GLFW_KEY_LEFT, {
+                    ON_KEY_PRESS!(game_ffi::GLFW_KEY_LEFT, {
                         let new_x = if (*sprite).x < -50.0 { 800.0 } else {(*sprite).x - 1.0 };
                         MOVE_SPRITE!(true, sprite, new_x, (*sprite).y);
                     });
 
-                    ON_KEY_PRESS!(ffi::GLFW_KEY_RIGHT, {
+                    ON_KEY_PRESS!(game_ffi::GLFW_KEY_RIGHT, {
                         let new_x = if (*sprite).x > 800.0 { -50.0 } else {(*sprite).x + 1.0 };
                         MOVE_SPRITE!(true, sprite, new_x, (*sprite).y);
                     });
 
-                    ON_KEY_PRESS!(ffi::GLFW_KEY_UP, {
+                    ON_KEY_PRESS!(game_ffi::GLFW_KEY_UP, {
                         let new_y = if (*sprite).y == -50.0 { 600.0 } else {(*sprite).y - 1.0 };
                         MOVE_SPRITE!(true, sprite, (*sprite).x, new_y);
                     });
 
-                    ON_KEY_PRESS!(ffi::GLFW_KEY_DOWN, {
+                    ON_KEY_PRESS!(game_ffi::GLFW_KEY_DOWN, {
                         let new_y = if (*sprite).y > 600.0 { -50.0 } else {(*sprite).y + 1.0 };
                         MOVE_SPRITE!(true, sprite, (*sprite).x, new_y);
                     });

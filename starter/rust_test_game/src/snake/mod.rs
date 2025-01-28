@@ -1,38 +1,6 @@
 use std::collections::VecDeque;
-
-use crate::ffi;
+use crate::game_ffi;
 use my_game_engine::{ON_KEY_PRESS, DUPE_SPRITE, SPAWN_SPRITE, SPRITE_X, SPRITE_Y, SPRITE_ATTR};
-
-pub enum Direction {
-    UP,
-    DOWN,
-    LEFT,
-    RIGHT
-}
-
-pub struct Window {
-    pub width: i32,
-    pub height: i32,
-    pub sprite_side: i32,
-}
-
-pub struct Snake {
-    body: VecDeque<*mut ffi::Sprite>,
-    speed: f32, // pixel per time tick
-    direction: Direction,
-    window: Window,
-}
-
-pub trait Movement {
-    // keep the object moving without change
-    fn go(&mut self);
-
-    // Grow the snake
-    fn grow(&mut self, tail: *mut ffi::Sprite);
-
-    // Shrink from the tail end
-    fn shrink(&mut self);
-}
 
 
 // going beyoung the *left* boundary
@@ -77,11 +45,43 @@ macro_rules! GO_DOWN {
     };
 }
 
+pub enum Direction {
+    UP,
+    DOWN,
+    LEFT,
+    RIGHT
+}
+
+pub struct Window {
+    pub width: i32,
+    pub height: i32,
+    pub sprite_side: i32,
+}
+
+pub struct Snake {
+    body: VecDeque<*mut game_ffi::Sprite>,
+    speed: f32, // pixel per time tick
+    direction: Direction,
+    window: Window,
+}
+
+pub trait Movement {
+    // keep the object moving without change
+    fn go(&mut self);
+
+    // Grow the snake
+    fn grow(&mut self, tail: *mut game_ffi::Sprite);
+
+    // Shrink from the tail end
+    fn shrink(&mut self);
+}
+
+
 
 impl Snake {
     // Public Methods
     pub fn new(window: Window, x: f32, y: f32, width: i32, height: i32, r: i32, g: i32, b:i32) -> Snake {
-        let sprite: *mut ffi::Sprite;
+        let sprite: *mut game_ffi::Sprite;
         unsafe {
             sprite = SPAWN_SPRITE!(false, x, y, width, height, r, g, b);
         }
@@ -91,7 +91,7 @@ impl Snake {
     pub fn render(&self){
         unsafe {
             for sprite in self.body.iter(){
-                ffi::render_sprite(*sprite);
+                game_ffi::render_sprite(*sprite);
             }
         }
     }
@@ -101,19 +101,19 @@ impl Snake {
     /// Check whether use changed the snake's direction, and return the new location of the head node
     fn update_direction(&mut self) {
         unsafe {
-            ON_KEY_PRESS!(ffi::GLFW_KEY_LEFT, {
+            ON_KEY_PRESS!(game_ffi::GLFW_KEY_LEFT, {
                 self.direction = Direction::LEFT;
             });
 
-            ON_KEY_PRESS!(ffi::GLFW_KEY_RIGHT, {
+            ON_KEY_PRESS!(game_ffi::GLFW_KEY_RIGHT, {
                 self.direction = Direction::RIGHT;
             });
 
-            ON_KEY_PRESS!(ffi::GLFW_KEY_UP, {
+            ON_KEY_PRESS!(game_ffi::GLFW_KEY_UP, {
                 self.direction = Direction::UP;
             });
 
-            ON_KEY_PRESS!(ffi::GLFW_KEY_DOWN, {
+            ON_KEY_PRESS!(game_ffi::GLFW_KEY_DOWN, {
                 self.direction = Direction::DOWN;
             });
         }
@@ -157,7 +157,7 @@ impl Movement for Snake {
         self.body.pop_back();
     }
 
-    fn grow(&mut self, new_item: *mut ffi::Sprite) {
+    fn grow(&mut self, new_item: *mut game_ffi::Sprite) {
         self.body.push_front(new_item);
     }
 

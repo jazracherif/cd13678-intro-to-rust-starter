@@ -4,9 +4,9 @@
 macro_rules! SPAWN_SPRITE {
     ($render:literal, $($x:expr),*) => {
         {
-            let sprite = ffi::create_sprite( $($x),* );
+            let sprite = game_ffi::create_sprite( $($x),* );
             if $render {
-                ffi::render_sprite(sprite);
+                game_ffi::render_sprite(sprite);
             }
             sprite
         }
@@ -35,10 +35,10 @@ macro_rules! MOVE_SPRITE {
     ($clear:literal, $sprite:ident, $new_x:expr, $new_y:expr) => {
         {
             if $clear {
-                ffi::clear_screen();
+                game_ffi::clear_screen();
             }
-            ffi::update_sprite_position($sprite,  $new_x, $new_y);
-            ffi::render_sprite($sprite);
+            game_ffi::update_sprite_position($sprite,  $new_x, $new_y);
+            game_ffi::render_sprite($sprite);
         }
     };
 }
@@ -47,7 +47,7 @@ macro_rules! MOVE_SPRITE {
 macro_rules! TICK {
     ($sleepms:expr) => {
         // Update the game window
-        ffi::update_game_window();
+        game_ffi::update_game_window();
         thread::sleep($sleepms);
     };
 }
@@ -55,7 +55,7 @@ macro_rules! TICK {
 #[macro_export]
 macro_rules! ON_KEY_PRESS {
     ($key:expr, $block:block) => {
-        if ffi::get_key(ffi::get_window(), $key) == ffi::GLFW_PRESS {
+        if game_ffi::get_key(game_ffi::get_window(), $key) == game_ffi::GLFW_PRESS {
             $block
         }
     };
@@ -83,7 +83,7 @@ macro_rules! CHANGE_SPRITE_COLOR {
 macro_rules! START_WINDOW_AND_GAME_LOOP {
     ($sleepms:expr, $loop_block:block) => {
         loop {
-            if ffi::window_should_close() == 1 {
+            if game_ffi::window_should_close() == 1 {
                 break;
             }
 
