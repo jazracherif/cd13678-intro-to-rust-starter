@@ -34,6 +34,12 @@ test-rust:
 	cargo test --manifest-path ./my_game_engine/Cargo.toml tests::test_key_presses -- --nocapture --ignored
 	cargo test --manifest-path ./my_game_engine/Cargo.toml tests::test_sprite_position_update -- --nocapture --ignored
 
+
+.PHONY: test-rust-more
 test-rust-more: test-rust
 	@echo "Running Rust Tests Serially..."
 	cargo test --manifest-path ./my_game_engine/Cargo.toml tests::test_sprite_flicker -- --nocapture --ignored
+
+.PHONY: setup
+setup:
+	sudo apt update && sudo apt install build-essential libglfw3 libglfw3-dev libssl-dev
