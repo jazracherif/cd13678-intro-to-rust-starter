@@ -6,8 +6,9 @@ use std::ffi::CString;
 
 mod game;
 mod snake;
+mod remote;
 use snake::Snake;
-use snake::{Movement, Window};
+use snake::Window;
 use reqwest::Error;
 
 const WINDOW_WIDTH  : i32 = 800;
@@ -18,14 +19,14 @@ const LOOP_SLEEP_MS: time::Duration = time::Duration::from_millis(10);
 #[tokio::main]
 async fn main()  -> Result<(), Error>{
   
-    let initial_sprite = game::request_sprite().await;
+    let initial_sprite = remote::request_sprite().await;
 
     let title = C_STRING!("Snake Game");
 
     unsafe {
         game_ffi::create_game_window(title, WINDOW_WIDTH, WINDOW_HEIGHT);
 
-        let mut snake = Snake::new(Window{width:WINDOW_WIDTH, height: WINDOW_HEIGHT, sprite_side: SPRIDE_SIDE}, 
+        let snake = Snake::new(Window{width:WINDOW_WIDTH, height: WINDOW_HEIGHT, sprite_side: SPRIDE_SIDE}, 
                                         initial_sprite.x, 
                                         initial_sprite.y,                                
                                         SPRIDE_SIDE, 
@@ -39,7 +40,7 @@ async fn main()  -> Result<(), Error>{
         START_WINDOW_AND_GAME_LOOP!(LOOP_SLEEP_MS, {
             game.render();            
         });
-
+        game.stop();
         Ok(())
     }
 }

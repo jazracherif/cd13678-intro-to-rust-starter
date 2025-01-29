@@ -27,7 +27,7 @@ macro_rules! GO_RIGHT {
 
 macro_rules! GO_UP {
     ($sprite:ident, $window:expr, $speed:expr) => {
-        if SPRITE_Y!($sprite) == - $window.sprite_side as f32 { 
+        if SPRITE_Y!($sprite) < - $window.sprite_side as f32 { 
             $window.height as f32
         } else {
             SPRITE_Y!($sprite) - 1.0 * $speed 
@@ -85,7 +85,7 @@ impl Snake {
         unsafe {
             sprite = SPAWN_SPRITE!(false, x, y, width, height, r, g, b);
         }
-        Snake{ direction: Direction::RIGHT, speed: 1.0, body: VecDeque::from([ sprite ]), window: window }
+        Snake{ direction: Direction::RIGHT, speed: 2.0, body: VecDeque::from([ sprite ]), window: window }
     }
 
     pub fn render(&self){
