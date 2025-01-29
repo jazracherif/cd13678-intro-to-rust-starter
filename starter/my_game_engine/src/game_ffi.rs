@@ -18,6 +18,12 @@ pub struct Sprite {
     pub y: f32 // Position
 }
 
+pub struct Window {
+    pub width: i32,
+    pub height: i32,
+    pub sprite_side: i32,
+}
+
 
 extern "C" {
 pub fn create_game_window(title:  *const c_char, width: i32, height: i32);

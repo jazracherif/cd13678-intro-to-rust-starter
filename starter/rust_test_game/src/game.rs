@@ -94,9 +94,9 @@ impl Game {
         unsafe {
             game_ffi::clear_screen();
             
-            self.render_snakes();
-
             self.render_food();
+
+            self.render_snakes();
         }
     }
 

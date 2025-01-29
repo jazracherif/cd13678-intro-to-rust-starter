@@ -1,61 +1,15 @@
 use std::collections::VecDeque;
 use crate::game_ffi;
-use my_game_engine::{ON_KEY_PRESS, DUPE_SPRITE, SPAWN_SPRITE, SPRITE_X, SPRITE_Y, SPRITE_ATTR};
+use my_game_engine::{ON_KEY_PRESS, DUPE_SPRITE, SPAWN_SPRITE, SPRITE_X, SPRITE_Y, SPRITE_ATTR,
+    GO_LEFT, GO_RIGHT, GO_UP, GO_DOWN };
 
-
-// going beyoung the *left* boundary
-// should take us to the right side of the window
-macro_rules! GO_LEFT {
-    ($sprite:ident, $window:expr, $speed:expr) => {
-        if SPRITE_X!($sprite) < - $window.sprite_side as f32 {
-            $window.width as f32
-        } else {
-            SPRITE_X!($sprite) - 1.0 * $speed 
-        }
-    };
-}
-
-macro_rules! GO_RIGHT {
-    ($sprite:ident, $window:expr, $speed:expr) => {
-        if SPRITE_X!($sprite) > $window.width as f32 { 
-            - $window.sprite_side as f32 
-        } else {
-            SPRITE_X!($sprite) + 1.0 * $speed 
-        }
-    };
-}
-
-macro_rules! GO_UP {
-    ($sprite:ident, $window:expr, $speed:expr) => {
-        if SPRITE_Y!($sprite) < - $window.sprite_side as f32 { 
-            $window.height as f32
-        } else {
-            SPRITE_Y!($sprite) - 1.0 * $speed 
-        }
-    };
-}
-
-macro_rules! GO_DOWN {
-    ($sprite:ident, $window:expr, $speed:expr) => {
-        if SPRITE_Y!($sprite) > $window.height as f32 { 
-            - $window.sprite_side as f32
-        } else {
-            SPRITE_Y!($sprite) + 1.0 * $speed 
-        }
-    };
-}
+use game_ffi::Window;
 
 pub enum Direction {
     UP,
     DOWN,
     LEFT,
     RIGHT
-}
-
-pub struct Window {
-    pub width: i32,
-    pub height: i32,
-    pub sprite_side: i32,
 }
 
 pub struct Snake {
