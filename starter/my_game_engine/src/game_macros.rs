@@ -32,7 +32,8 @@ macro_rules! DUPE_SPRITE {
     };
 }
 /// move a sprite to a new position, potentially clearing screen first
-/// and then rendering the sprite
+/// and then rendering the sprite. This will render the sprite. Use
+/// DUPE_SPRITE if you simple want to duplicate a sprite at a new location
 #[macro_export]
 macro_rules! MOVE_SPRITE {
     ($clear:literal, $sprite:ident, $new_x:expr, $new_y:expr) => {
@@ -129,7 +130,7 @@ macro_rules! C_STRING {
 
 #[macro_export]
 macro_rules! SPRITE_ATTR {
-    ($sprite:ident, $attr:ident) => {
+    ($sprite:expr, $attr:ident) => {
         {
             unsafe {
                 (*$sprite).$attr
@@ -140,7 +141,7 @@ macro_rules! SPRITE_ATTR {
 
 #[macro_export]
 macro_rules! SPRITE_X {
-    ($sprite:ident ) => {
+    ($sprite:expr ) => {
         {
             SPRITE_ATTR!($sprite, x)
         }
@@ -149,9 +150,27 @@ macro_rules! SPRITE_X {
 
 #[macro_export]
 macro_rules! SPRITE_Y {
-    ($sprite:ident) => {
+    ($sprite:expr) => {
         {
             SPRITE_ATTR!($sprite, y)
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! SPRITE_WIDTH {
+    ($sprite:expr) => {
+        {
+            SPRITE_ATTR!($sprite, width)
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! SPRITE_HEIGHT {
+    ($sprite:expr) => {
+        {
+            SPRITE_ATTR!($sprite, height)
         }
     };
 }

@@ -1,26 +1,56 @@
 use std::time;
 use std::thread;
 use std::sync::{Arc, Mutex};
+use crossbeam_channel::unbounded;
 
-use rand::prelude::*;
-
-
-use my_game_engine::game_ffi;
+// use rand::prelude::*; // DEBUG
+const SPRIDE_SIDE   : i32 = 25; // TODO: merge with the one in main.rs
 
 use crate::remote;
 use crate::remote::SpriteData;
 use crate::snake::{self, Snake};
 use snake::Movement;
-use my_game_engine::SPAWN_SPRITE;
 
-use crossbeam_channel::unbounded;
+use my_game_engine::game_ffi;
+use my_game_engine::{SPAWN_SPRITE, SPRITE_X, SPRITE_Y, SPRITE_ATTR, SPRITE_HEIGHT, SPRITE_WIDTH};
 
-const FOOD_UPDATE_EVERY : time::Duration = time::Duration::from_secs(2);
-const FOOD_EXPIRES_IN : time::Duration = time::Duration::from_secs(10);
 
+const FOOD_UPDATE_EVERY : time::Duration = time::Duration::from_secs(1);
+const FOOD_EXPIRES_IN : time::Duration = time::Duration::from_secs(100);
+use core::cmp::PartialEq;
+
+#[derive(PartialEq, Clone)]
 pub struct Food {
     sprite: *mut game_ffi::Sprite,
     expires: time::Instant,
+}
+
+/// Check whether sprite 2 is inside sprite 1 
+macro_rules! OVERLAP {
+    ($s1:expr, $s2:expr) => {
+        {
+            let mut inside: bool = false;
+            let x1 = SPRITE_X!($s1);
+            let y1 = SPRITE_Y!($s1);
+            let x2 = SPRITE_X!($s2);
+            let y2 = SPRITE_Y!($s2);
+            // gather all corners in sprite number 2
+            let corners = vec![ (x2, y2), 
+                                (x2 + SPRITE_WIDTH!($s2) as f32, y2), 
+                                (x2, y2 + SPRITE_HEIGHT!($s2) as f32), 
+                                (x2 + SPRITE_WIDTH!($s2) as f32, y2 + SPRITE_HEIGHT!($s2) as f32)];
+            
+            // check whether each corner in sprite 2 is contained in sprite 1
+            for (x, y) in corners {
+                if (x >= x1 && x <= x1 + SPRITE_WIDTH!($s1) as f32) && 
+                    (y >= y1 &&  y < y1 + SPRITE_HEIGHT!($s1) as f32){
+                        inside = true;
+                        break;
+                    }
+            }
+            inside
+        }
+    };
 }
 
 pub struct Game{
@@ -57,8 +87,8 @@ impl Game {
            serviced at the same time.
         */
         thread::spawn( move || {
-            // let mut rng = rand::rng();
-            // let nums: Vec<i32> = (1..400).collect();
+            // let mut rng = rand::rng(); // DEBUG
+            // let nums: Vec<i32> = (1..400).collect(); // DEBUG
             
             let runtime = tokio::runtime::Runtime::new().unwrap();            
 
@@ -70,8 +100,9 @@ impl Game {
                     break;
                 }
                 // listen to request, spawn a new async task for each new req from main
-                for reqid in thread_receiver.iter(){
-                    // let result: SpriteData = SpriteData{x: *nums.choose(&mut rng).unwrap() as f32, y: *nums.choose(&mut rng).unwrap() as f32, width: 25, height:25, r:255, g:0, b:0 };
+                for _ in thread_receiver.iter(){
+                    // let result: SpriteData = SpriteData{x: *nums.choose(&mut rng).unwrap() as f32, 
+                    // y: *nums.choose(&mut rng).unwrap() as f32, width: 25, height:25, r:255, g:0, b:0 }; // DEBUG
                     let thread_sender_clone = thread_sender.clone();
                     runtime.spawn(runtime.spawn(async move {
                         let sprite_data = remote::request_sprite().await;
@@ -94,9 +125,10 @@ impl Game {
         unsafe {
             game_ffi::clear_screen();
             
+            self.render_snakes();
+
             self.render_food();
 
-            self.render_snakes();
         }
     }
 
@@ -104,9 +136,59 @@ impl Game {
         self.running = Arc::new(Mutex::new(false));
     }
 
+    fn match_food(&self, snake: &Snake, food: &Vec<Food>) -> Vec<Food> {
+        match snake.head() {
+            Some(head) => {     
+                food.iter().cloned().filter(|food|  {
+                            // check snake head is inside the food box
+                            let head_x = SPRITE_X!(*head);
+                            let head_y = SPRITE_Y!(*head);
+                            let food_x = SPRITE_X!(food.sprite);
+                            let food_y = SPRITE_Y!(food.sprite);
+                            
+                            f32::sqrt((food_x - head_x).powi(2) + (food_y - head_y).powi(2) ) < SPRIDE_SIDE as f32
+                            // food_x > head_x &&  head_x < head_x + SPRIDE_SIDE as f32 && 
+                            //     food_y > head_y &&  head_y < head_y + SPRIDE_SIDE as f32
+                            // SPRITE_X!(food.sprite) == SPRITE_X!(*head) && SPRITE_Y!(food.sprite) == SPRITE_Y!(*head)
+                        }).collect::<Vec<Food>>()                              
+            },
+            None => { vec![] }
+        }
+    }
+
     fn render_snakes(&mut self){
         for snake in self.snakes.iter_mut() {
-            snake.go();
+            snake.crawl();
+            // todo: turn into a function or macro
+            // check if we encountered food
+            let food_consumed: Vec<Food> =  match snake.head() {
+                Some(head) => {     
+                    self.food.iter().cloned().filter(|food|  {
+                                // check snake head is inside the food box
+                                // let head_x = SPRITE_X!(*head);
+                                // let head_y = SPRITE_Y!(*head);
+                                // let food_x = SPRITE_X!(food.sprite);
+                                // let food_y = SPRITE_Y!(food.sprite);
+                                // (head_x >= food_x && head_x <= food_x + SPRIDE_SIDE as f32) && 
+                                //     (head_y >= food_y - SPRIDE_SIDE as f32 &&  head_y < food_y)
+                                OVERLAP!(food.sprite, *head)
+                                
+
+                                // SPRITE_X!(food.sprite) == SPRITE_X!(*head) && SPRITE_Y!(food.sprite) == SPRITE_Y!(*head)
+                            }).collect::<Vec<Food>>()                              
+                },
+                None => { vec![] }
+            };
+            if !food_consumed.is_empty() {
+                snake.grow();
+
+                println!("food consumed {}", food_consumed.len());
+                println!("size of food before {}", self.food.len());
+                // remove food items
+                self.food.retain(|food| !food_consumed.contains(&food));
+                println!("size of food now {}", self.food.len());
+            }
+
             snake.render(); 
         }
     }
@@ -115,20 +197,19 @@ impl Game {
         // cleanup
         self.rm_expired_food();
 
-        // new food
+        // is there new food
         let mut new_food: Vec<Food> = Vec::new();
         self.check_new_food(&mut new_food);
         if !new_food.is_empty() {
             println!("Added {} new food item(s)", new_food.len());    
         }
-
         self.food.append(&mut new_food);
          
-        //request new food
+        // request new food
         if self.last_food_fetched.elapsed() > FOOD_UPDATE_EVERY {
             self.request_new_food();
             self.last_food_fetched = time::Instant::now();
-            println!("current number of {} food items", self.food.len());
+            println!("food items: {}", self.food.len());
         }
 
         //render
@@ -152,7 +233,7 @@ impl Game {
                 receiver.try_iter().for_each(move |sprite_data| {
                     new_food.push(
                         Food{sprite: SPAWN_SPRITE!(false, sprite_data.x, sprite_data.y, 
-                            sprite_data.width, sprite_data.height, sprite_data.r, sprite_data.g, sprite_data.b),
+                            SPRIDE_SIDE, SPRIDE_SIDE, sprite_data.r, sprite_data.g, sprite_data.b),
                             expires: time::Instant::now()});
                     });
             }

@@ -1,4 +1,6 @@
 use std::collections::VecDeque;
+use std::option::Option;
+
 use crate::game_ffi;
 use my_game_engine::{ON_KEY_PRESS, DUPE_SPRITE, SPAWN_SPRITE, SPRITE_X, SPRITE_Y, SPRITE_ATTR,
     GO_LEFT, GO_RIGHT, GO_UP, GO_DOWN };
@@ -21,15 +23,14 @@ pub struct Snake {
 
 pub trait Movement {
     // keep the object moving without change
-    fn go(&mut self);
+    fn crawl(&mut self);
 
     // Grow the snake
-    fn grow(&mut self, tail: *mut game_ffi::Sprite);
+    fn grow(&mut self);
 
     // Shrink from the tail end
     fn shrink(&mut self);
 }
-
 
 
 impl Snake {
@@ -45,9 +46,14 @@ impl Snake {
     pub fn render(&self){
         unsafe {
             for sprite in self.body.iter(){
+                // println!("x:{} y:{}", SPRITE_X!(*sprite), SPRITE_Y!(*sprite));
                 game_ffi::render_sprite(*sprite);
             }
         }
+    }
+
+    pub fn head(&self) -> Option< &*mut game_ffi::Sprite>{
+        self.body.front()
     }
 
     // Private Methods
@@ -73,7 +79,9 @@ impl Snake {
         }
     }
 
-    fn create_new_head(&mut self) {
+    /// create and append a new head to the snake
+    fn move_snake(&mut self) {
+
         let sprite = *self.body.front().expect("Empty head");
 
         unsafe {
@@ -96,7 +104,6 @@ impl Snake {
                     DUPE_SPRITE!(sprite , SPRITE_X!(sprite) , new_y)
                 },
             };
-
             self.body.push_front(new_head);
         }        
     }
@@ -104,15 +111,17 @@ impl Snake {
 }
 
 impl Movement for Snake {
-    /// 
-    fn go(&mut self) {
+    /// move head and delete the tail without rendering
+    fn crawl(&mut self) {
         self.update_direction();
-        self.create_new_head();        
+        self.move_snake();        
         self.body.pop_back();
     }
 
-    fn grow(&mut self, new_item: *mut game_ffi::Sprite) {
-        self.body.push_front(new_item);
+    /// expand the snake with a new head in the same direction
+    fn grow(&mut self) {
+        self.move_snake(); 
+        println!("Snake size is now {}",self.body.len() );    
     }
 
     fn shrink(&mut self) {
