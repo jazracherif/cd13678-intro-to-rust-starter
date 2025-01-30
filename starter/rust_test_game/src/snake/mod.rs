@@ -16,7 +16,10 @@ pub enum Direction {
 
 pub struct Snake {
     body: VecDeque<*mut game_ffi::Sprite>,
-    speed: f32, // pixel per time tick
+    
+    pub speed: i32, // speed at which to move the snake. number of sprite moves per game loop
+    stride: f32, // by how much to move the head of the snake
+
     direction: Direction,
     window: Window,
 }
@@ -40,7 +43,7 @@ impl Snake {
         unsafe {
             sprite = SPAWN_SPRITE!(false, x, y, width, height, r, g, b);
         }
-        Snake{ direction: Direction::RIGHT, speed: 2.0, body: VecDeque::from([ sprite ]), window: window }
+        Snake{ direction: Direction::RIGHT, speed: 1, stride: 2 as f32, body: VecDeque::from([ sprite ]), window: window }
     }
 
     pub fn render(&self){
@@ -80,32 +83,36 @@ impl Snake {
     }
 
     /// create and append a new head to the snake
-    fn move_snake(&mut self) {
+    fn move_snake(&mut self, grow: bool) {
 
-        let sprite = *self.body.front().expect("Empty head");
-
-        unsafe {
+        for _ in 0..2 as i32 {
+            let sprite: *mut game_ffi::Sprite = *self.body.front().expect("Empty head");
             let new_head = match self.direction {
                 Direction::LEFT => { 
                     // let new_x = if SPRITE_X!(sprite) < -self.window.sprite_side as f32 { self.window.width as f32} else {SPRITE_X!(sprite)- 1.0 * self.speed };
-                    let new_x = GO_LEFT!(sprite, self.window, self.speed);
+                    let new_x = GO_LEFT!(sprite, self.window, self.stride);
                     DUPE_SPRITE!(sprite , new_x , SPRITE_Y!(sprite))
                 },
                 Direction::RIGHT => { 
-                    let new_x = GO_RIGHT!(sprite, self.window, self.speed);
+                    let new_x = GO_RIGHT!(sprite, self.window, self.stride);
                     DUPE_SPRITE!(sprite , new_x, SPRITE_Y!(sprite) )
                 },
                 Direction::UP => { 
-                    let new_y = GO_UP!(sprite, self.window, self.speed);
+                    let new_y = GO_UP!(sprite, self.window, self.stride);
                     DUPE_SPRITE!(sprite , SPRITE_X!(sprite) , new_y )
                 },
                 Direction::DOWN => { 
-                    let new_y = GO_DOWN!(sprite, self.window, self.speed);
+                    let new_y = GO_DOWN!(sprite, self.window, self.stride);
                     DUPE_SPRITE!(sprite , SPRITE_X!(sprite) , new_y)
                 },
-            };
-            self.body.push_front(new_head);
-        }        
+            };   
+            self.body.push_front(new_head);         
+        
+        if !grow {
+            // self.body.drain((self.body.len() - self.speed as usize)..);
+            self.body.pop_back();
+        }
+        }
     }
 
 }
@@ -114,14 +121,17 @@ impl Movement for Snake {
     /// move head and delete the tail without rendering
     fn crawl(&mut self) {
         self.update_direction();
-        self.move_snake();        
-        self.body.pop_back();
+        self.move_snake(false);        
     }
 
     /// expand the snake with a new head in the same direction
     fn grow(&mut self) {
-        self.move_snake(); 
-        println!("Snake size is now {}",self.body.len() );    
+        // self.stride -= 0.01 * self.stride as f32;
+        self.stride += 0.02;
+
+        // self.speed += 1;
+        self.move_snake(true);
+        println!("Snake size: {} - speed:{} - stride: {}",self.body.len(), self.speed, self.stride);    
     }
 
     fn shrink(&mut self) {

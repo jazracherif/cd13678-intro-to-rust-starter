@@ -18,7 +18,7 @@ macro_rules! SPAWN_SPRITE {
 
 #[macro_export]
 macro_rules! DUPE_SPRITE {
-    ($sprite:ident, $x:expr, $y:expr) => {
+    ($sprite:expr, $x:expr, $y:expr) => {
         { 
             SPAWN_SPRITE!(false, 
                 $x, 
@@ -36,14 +36,17 @@ macro_rules! DUPE_SPRITE {
 /// DUPE_SPRITE if you simple want to duplicate a sprite at a new location
 #[macro_export]
 macro_rules! MOVE_SPRITE {
-    ($clear:literal, $sprite:ident, $new_x:expr, $new_y:expr) => {
+    ($clear_before:literal, $render_after:literal, $sprite:expr, $new_x:expr, $new_y:expr) => {
         {
             unsafe {
-                if $clear {
+                if $clear_before {
                     game_ffi::clear_screen();
                 }
                 game_ffi::update_sprite_position($sprite,  $new_x, $new_y);
-                game_ffi::render_sprite($sprite);
+
+                if $render_after {
+                    game_ffi::render_sprite($sprite);
+                }
             }            
         }
     };
@@ -80,7 +83,7 @@ macro_rules! ON_KEY_PRESS {
 
 #[macro_export]
 macro_rules! CHANGE_SPRITE_COLOR {
-    ($sprite:ident, $r:literal, $g:literal, $b:literal) => {
+    ($sprite:expr, $r:literal, $g:literal, $b:literal) => {
         {
             let sprite = SPAWN_SPRITE!(true, 
                 (*$sprite).x, 
@@ -177,7 +180,7 @@ macro_rules! SPRITE_HEIGHT {
 
 #[macro_export]
 macro_rules! GO_LEFT {
-    ($sprite:ident, $window:expr, $speed:expr) => {
+    ($sprite:expr, $window:expr, $speed:expr) => {
         if SPRITE_X!($sprite) < - $window.sprite_side as f32 {
             $window.width as f32
         } else {
@@ -188,7 +191,7 @@ macro_rules! GO_LEFT {
 
 #[macro_export]
 macro_rules! GO_RIGHT {
-    ($sprite:ident, $window:expr, $speed:expr) => {
+    ($sprite:expr, $window:expr, $speed:expr) => {
         if SPRITE_X!($sprite) > $window.width as f32 { 
             - $window.sprite_side as f32 
         } else {
@@ -199,7 +202,7 @@ macro_rules! GO_RIGHT {
 
 #[macro_export]
 macro_rules! GO_UP {
-    ($sprite:ident, $window:expr, $speed:expr) => {
+    ($sprite:expr, $window:expr, $speed:expr) => {
         if SPRITE_Y!($sprite) < - $window.sprite_side as f32 { 
             $window.height as f32
         } else {
@@ -210,7 +213,7 @@ macro_rules! GO_UP {
 
 #[macro_export]
 macro_rules! GO_DOWN {
-    ($sprite:ident, $window:expr, $speed:expr) => {
+    ($sprite:expr, $window:expr, $speed:expr) => {
         if SPRITE_Y!($sprite) > $window.height as f32 { 
             - $window.sprite_side as f32
         } else {

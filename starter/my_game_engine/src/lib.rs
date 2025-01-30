@@ -165,22 +165,22 @@ mod tests {
             {
                 ON_KEY_PRESS!(game_ffi::GLFW_KEY_LEFT, {
                     let new_x = GO_LEFT!(sprite, WINDOW, 1.0);
-                    MOVE_SPRITE!(true, sprite, new_x, SPRITE_Y!(sprite));  
+                    MOVE_SPRITE!(true, true, sprite, new_x, SPRITE_Y!(sprite));  
                 });
 
                 ON_KEY_PRESS!(game_ffi::GLFW_KEY_RIGHT, {
                     let new_x = GO_RIGHT!(sprite, WINDOW, 1.0);
-                    MOVE_SPRITE!(true, sprite, new_x, SPRITE_Y!(sprite));
+                    MOVE_SPRITE!(true, true, sprite, new_x, SPRITE_Y!(sprite));
                 });
 
                 ON_KEY_PRESS!(game_ffi::GLFW_KEY_UP, {
                     let new_y = GO_UP!(sprite, WINDOW, 1.0);
-                    MOVE_SPRITE!(true, sprite, SPRITE_X!(sprite), new_y);
+                    MOVE_SPRITE!(true, true, sprite, SPRITE_X!(sprite), new_y);
                 });
 
                 ON_KEY_PRESS!(game_ffi::GLFW_KEY_DOWN, {
                     let new_y = GO_DOWN!(sprite, WINDOW, 1.0);
-                    MOVE_SPRITE!(true, sprite, SPRITE_X!(sprite), new_y);
+                    MOVE_SPRITE!(true, true, sprite, SPRITE_X!(sprite), new_y);
                 });
             }
         );

@@ -30,13 +30,13 @@ const SPRITE_SERVER_URL: &str = "https://get-random-sprite-data-dan-chiarlones-p
 
 // TODO: handle case where the sprite is too dark to show against black background
 pub async fn request_sprite() -> SpriteData  {
-    println!("Fetching new sprite from {}", SPRITE_SERVER_URL);
+    // println!("Fetching new sprite from {}", SPRITE_SERVER_URL);
 
     let resp = call(&String::from(SPRITE_SERVER_URL)).await;
 
     let sprite = decode(resp.unwrap());
 
-    println!("Received {:?}", sprite);
+    // println!("Received {:?}", sprite);
 
     sprite.unwrap()
 }

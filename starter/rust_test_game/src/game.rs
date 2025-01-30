@@ -136,25 +136,13 @@ impl Game {
         self.running = Arc::new(Mutex::new(false));
     }
 
-    fn match_food(&self, snake: &Snake, food: &Vec<Food>) -> Vec<Food> {
-        match snake.head() {
-            Some(head) => {     
-                food.iter().cloned().filter(|food|  {
-                            // check snake head is inside the food box
-                            let head_x = SPRITE_X!(*head);
-                            let head_y = SPRITE_Y!(*head);
-                            let food_x = SPRITE_X!(food.sprite);
-                            let food_y = SPRITE_Y!(food.sprite);
-                            
-                            f32::sqrt((food_x - head_x).powi(2) + (food_y - head_y).powi(2) ) < SPRIDE_SIDE as f32
-                            // food_x > head_x &&  head_x < head_x + SPRIDE_SIDE as f32 && 
-                            //     food_y > head_y &&  head_y < head_y + SPRIDE_SIDE as f32
-                            // SPRITE_X!(food.sprite) == SPRITE_X!(*head) && SPRITE_Y!(food.sprite) == SPRITE_Y!(*head)
-                        }).collect::<Vec<Food>>()                              
-            },
-            None => { vec![] }
-        }
+    pub fn stopped(&mut self) -> bool{
+        *self.running.lock().unwrap()
     }
+
+    // fn match_food(&self, snake: &Snake, food: &Vec<Food>) -> Vec<Food> {
+        
+    // }
 
     fn render_snakes(&mut self){
         for snake in self.snakes.iter_mut() {
@@ -182,11 +170,9 @@ impl Game {
             if !food_consumed.is_empty() {
                 snake.grow();
 
-                println!("food consumed {}", food_consumed.len());
-                println!("size of food before {}", self.food.len());
                 // remove food items
                 self.food.retain(|food| !food_consumed.contains(&food));
-                println!("size of food now {}", self.food.len());
+                println!("food eaten! remaining food {}", self.food.len());
             }
 
             snake.render(); 
@@ -200,16 +186,12 @@ impl Game {
         // is there new food
         let mut new_food: Vec<Food> = Vec::new();
         self.check_new_food(&mut new_food);
-        if !new_food.is_empty() {
-            println!("Added {} new food item(s)", new_food.len());    
-        }
         self.food.append(&mut new_food);
          
         // request new food
         if self.last_food_fetched.elapsed() > FOOD_UPDATE_EVERY {
             self.request_new_food();
             self.last_food_fetched = time::Instant::now();
-            println!("food items: {}", self.food.len());
         }
 
         //render
@@ -229,14 +211,13 @@ impl Game {
         let receiver = &self.channels.1;
 
         if !receiver.is_empty(){
-            unsafe {
-                receiver.try_iter().for_each(move |sprite_data| {
-                    new_food.push(
-                        Food{sprite: SPAWN_SPRITE!(false, sprite_data.x, sprite_data.y, 
-                            SPRIDE_SIDE, SPRIDE_SIDE, sprite_data.r, sprite_data.g, sprite_data.b),
-                            expires: time::Instant::now()});
-                    });
-            }
+            receiver.try_iter().for_each(move |sprite_data| {
+                new_food.push(
+                    Food{sprite: SPAWN_SPRITE!(false, sprite_data.x, sprite_data.y, 
+                        SPRIDE_SIDE, SPRIDE_SIDE, sprite_data.r, sprite_data.g, sprite_data.b),
+                        expires: time::Instant::now()});
+                });
+            
         }
     }
 

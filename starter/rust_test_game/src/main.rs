@@ -46,12 +46,12 @@ async fn main()  -> Result<(), Error>{
 
     let mut game = game::Game::create_snakes(vec![snake]);
 
-    unsafe {
-        // Main loop
-        START_WINDOW_AND_GAME_LOOP!(LOOP_SLEEP_MS, {
-            game.render();            
-        });
-        game.stop();
-        Ok(())
-    }
+    // Main loopq
+    START_WINDOW_AND_GAME_LOOP!(LOOP_SLEEP_MS, {
+        game.render();
+    });
+
+    game.stop();
+    Ok(())
+
 }
