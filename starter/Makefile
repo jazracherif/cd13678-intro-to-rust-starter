@@ -17,12 +17,12 @@ GLFW_HEADERS = ./glfw-3.4/include/
 build-c:
 	@echo "Building OpenGL Wrapper library..."
 	gcc -c -fPIC $(OPENGL_WRAPPER_LIB_SRC) -o $(OPENGL_WRAPPER_LIB_OBJ) # Compile source file
-	gcc -shared -o $(OPENGL_WRAPPER_LIB_SO) $(OPENGL_WRAPPER_LIB_OBJ) -lglfw -lGL # Create shared library
+	gcc -shared -o $(OPENGL_WRAPPER_LIB_SO) $(OPENGL_WRAPPER_LIB_OBJ) -lglfw -lGL -lglut # Create shared library
 
 .PHONY: run-c
 run-c: build-c
 	@echo "Running Test Game..."
-	gcc $(TEST_GAME_SRC) -o $(TEST_GAME_EXE) -L$(OUTPUT_DIR) -l$(OPENGL_WRAPPER_LIB) -Wl,-rpath,$(OUTPUT_DIR) # Compile source file
+	gcc $(TEST_GAME_SRC) -o $(TEST_GAME_EXE) -L$(OUTPUT_DIR) -l$(OPENGL_WRAPPER_LIB) -lglut -Wl,-rpath,$(OUTPUT_DIR) # Compile source file
 	$(TEST_GAME_EXE) # Run the test game
 
 .PHONY: test-rust
@@ -42,4 +42,4 @@ test-rust-more: test-rust
 
 .PHONY: setup
 setup:
-	sudo apt update && sudo apt install build-essential libglfw3 libglfw3-dev libssl-dev
+	sudo apt update && sudo apt install build-essential libglfw3 libglfw3-dev libssl-dev freeglut3-dev

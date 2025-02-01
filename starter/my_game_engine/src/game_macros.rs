@@ -221,3 +221,12 @@ macro_rules! GO_DOWN {
         }
     };
 }
+
+#[macro_export]
+macro_rules! TEXT_RENDER {
+    ($text:ident, $x:expr, $y:expr, $scale:expr, $r:expr, $g:expr, $b:expr) => {
+        {
+            unsafe { game_ffi::renderText($text, $x, $y, $scale, $r, $g, $b); }
+        }
+    };
+}

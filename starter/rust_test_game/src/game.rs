@@ -2,6 +2,8 @@ use std::time;
 use std::thread;
 use std::sync::{Arc, Mutex};
 use crossbeam_channel::unbounded;
+use my_game_engine::C_STRING;
+use std::ffi::CString;
 
 // use rand::prelude::*; // DEBUG
 const SPRIDE_SIDE   : i32 = 25; // TODO: merge with the one in main.rs
@@ -12,21 +14,28 @@ use crate::snake::{self, Snake};
 use snake::Movement;
 
 use my_game_engine::game_ffi;
-use my_game_engine::{SPAWN_SPRITE, SPRITE_X, SPRITE_Y, SPRITE_ATTR, SPRITE_HEIGHT, SPRITE_WIDTH};
+use my_game_engine::{SPAWN_SPRITE, SPRITE_X, SPRITE_Y, SPRITE_ATTR, SPRITE_HEIGHT, SPRITE_WIDTH, TEXT_RENDER};
 
-
-const FOOD_UPDATE_EVERY : time::Duration = time::Duration::from_secs(1);
+const FOOD_UPDATE_EVERY : time::Duration = time::Duration::from_millis(500);
 const FOOD_EXPIRES_IN : time::Duration = time::Duration::from_secs(100);
 use core::cmp::PartialEq;
+
+#[derive(PartialEq, Clone)]
+enum FoodType {
+    Good,
+    Bad
+}
 
 #[derive(PartialEq, Clone)]
 pub struct Food {
     sprite: *mut game_ffi::Sprite,
     expires: time::Instant,
+    food_type: FoodType
 }
 
-/// Check whether sprite 2 is inside sprite 1 
-macro_rules! OVERLAP {
+
+/// Check whether sprite 2 overlaps sprite 1 
+macro_rules! CHECK_SPRITE_OVERLAP {
     ($s1:expr, $s2:expr) => {
         {
             let mut inside: bool = false;
@@ -58,7 +67,8 @@ pub struct Game{
     food: Vec<Food>, // these will be populated by background app
     last_food_fetched: time::Instant,
     running: Arc<Mutex<bool>>,
-    channels: (crossbeam_channel::Sender<i32>, crossbeam_channel::Receiver<SpriteData>)
+    channels: (crossbeam_channel::Sender<i32>, crossbeam_channel::Receiver<SpriteData>),
+    score: i32,
 }
 
 impl Game {
@@ -73,7 +83,8 @@ impl Game {
                             food: food, 
                             last_food_fetched: time::Instant::now(), 
                             running: Arc::new(Mutex::new(true)),
-                            channels: (sender_main, receiver_main)
+                            channels: (sender_main, receiver_main),
+                            score: 0
                         };
 
         let thread_sender = sender_remote.clone();
@@ -124,68 +135,86 @@ impl Game {
     pub fn render(&mut self){
         unsafe {
             game_ffi::clear_screen();
-            
-            self.render_snakes();
-
-            self.render_food();
-
         }
+        self.render_snakes();
+
+        self.render_food();
+
+        // Render Score
+        self.render_score();
+    }
+
+    fn render_score(&self) {
+        let score = self.score.to_string();
+        let score_text = C_STRING!(format!("score={score}"));
+        TEXT_RENDER!(score_text, 0.0, 20.0, 100.0, 255.0, 0.0, 0.0);
     }
 
     pub fn stop(&mut self){
-        self.running = Arc::new(Mutex::new(false));
+        println!("STOP the game");
+        let mut running = self.running.lock().unwrap();
+        *running = false;
     }
 
-    pub fn stopped(&mut self) -> bool{
+    pub fn running(&self) -> bool{
         *self.running.lock().unwrap()
     }
 
-    // fn match_food(&self, snake: &Snake, food: &Vec<Food>) -> Vec<Food> {
-        
-    // }
 
     fn render_snakes(&mut self){
-        for snake in self.snakes.iter_mut() {
-            snake.crawl();
-            // todo: turn into a function or macro
-            // check if we encountered food
-            let food_consumed: Vec<Food> =  match snake.head() {
-                Some(head) => {     
-                    self.food.iter().cloned().filter(|food|  {
-                                // check snake head is inside the food box
-                                // let head_x = SPRITE_X!(*head);
-                                // let head_y = SPRITE_Y!(*head);
-                                // let food_x = SPRITE_X!(food.sprite);
-                                // let food_y = SPRITE_Y!(food.sprite);
-                                // (head_x >= food_x && head_x <= food_x + SPRIDE_SIDE as f32) && 
-                                //     (head_y >= food_y - SPRIDE_SIDE as f32 &&  head_y < food_y)
-                                OVERLAP!(food.sprite, *head)
-                                
+        let mut dead_snake: Option<&*mut game_ffi::Sprite> = None;
+        {
+            for snake in self.snakes.iter_mut() {
+                snake.crawl();
+                // check if we encountered food
+                let food_consumed: Vec<Food> =  match snake.head() {
+                    Some(head) => {     
+                        self.food.iter().cloned()
+                            .filter(|food| CHECK_SPRITE_OVERLAP!(food.sprite, *head)).collect::<Vec<Food>>()                              
+                    },
+                    None => { vec![] }
+                };
+                if !food_consumed.is_empty() {                
+                    if food_consumed.iter().filter(|food| food.food_type == FoodType::Bad).count() != 0  {
+                        // bad food eaten, die!
+                        dead_snake = Some(snake.head().expect("Head not found!"));
+                        break;
+                    }
 
-                                // SPRITE_X!(food.sprite) == SPRITE_X!(*head) && SPRITE_Y!(food.sprite) == SPRITE_Y!(*head)
-                            }).collect::<Vec<Food>>()                              
-                },
-                None => { vec![] }
-            };
-            if !food_consumed.is_empty() {
-                snake.grow();
+                    self.score += food_consumed.len() as i32;
+                    snake.grow();
 
-                // remove food items
-                self.food.retain(|food| !food_consumed.contains(&food));
-                println!("food eaten! remaining food {}", self.food.len());
+                    // remove food items
+                    self.food.retain(|food| !food_consumed.contains(&food));
+                    println!("food eaten! remaining food {}", self.food.len());
+                }
+                snake.render(); 
             }
-
-            snake.render(); 
         }
+        
+        match dead_snake {
+            Some(&head_sprite) => {
+                self.stop();
+                SPAWN_SPRITE!(true, 
+                            SPRITE_X!(head_sprite), 
+                            SPRITE_Y!(head_sprite),
+                            SPRITE_WIDTH!(head_sprite), 
+                            SPRITE_HEIGHT!(head_sprite), 
+                            250,  
+                            255,  
+                            255);
+            },
+            None => {}
+        };
     }
 
     fn render_food(&mut self){
         // cleanup
-        self.rm_expired_food();
+        self.remove_expired_food();
 
         // is there new food
         let mut new_food: Vec<Food> = Vec::new();
-        self.check_new_food(&mut new_food);
+        self.check_new_food_downloaded(&mut new_food);
         self.food.append(&mut new_food);
          
         // request new food
@@ -203,25 +232,33 @@ impl Game {
     }
 
     // Check whether any food has expired and remove it
-    fn rm_expired_food(&mut self){
+    fn remove_expired_food(&mut self){
         self.food.retain(|x| x.expires.elapsed() < FOOD_EXPIRES_IN);
     }
 
-    fn check_new_food(&self, new_food: & mut Vec<Food>) {
+    fn check_new_food_downloaded(&self, new_food: & mut Vec<Food>) {
         let receiver = &self.channels.1;
 
         if !receiver.is_empty(){
-            receiver.try_iter().for_each(move |sprite_data| {
+            receiver.try_iter().for_each(move |mut sprite_data| {
+                let mut food_type = FoodType::Good;
+                if sprite_data.r > 150 {
+                    sprite_data.r = 255;
+                    sprite_data.g = 0;
+                    sprite_data.b = 0;
+                    food_type = FoodType::Bad;
+                }
+
                 new_food.push(
                     Food{sprite: SPAWN_SPRITE!(false, sprite_data.x, sprite_data.y, 
                         SPRIDE_SIDE, SPRIDE_SIDE, sprite_data.r, sprite_data.g, sprite_data.b),
+                        food_type,
                         expires: time::Instant::now()});
                 });
             
         }
     }
 
-    // get new food if needed
     fn request_new_food(&self){
         println!("Request 1 more food item");
         let sender = &self.channels.0;

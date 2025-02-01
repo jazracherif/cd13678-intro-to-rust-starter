@@ -27,6 +27,7 @@ mod tests {
 
         unsafe { game_ffi::create_game_window(title, WINDOW.width, WINDOW.height); }
 
+
         // Main loop
         START_WINDOW_AND_GAME_LOOP!(LOOP_SLEEP_MS, {});
     }
@@ -184,7 +185,24 @@ mod tests {
                 });
             }
         );
-    }    
+    }   
+    
+    #[test]
+    #[ignore]
+    fn test_simple_game_loop_with_text(){
+        let title = C_STRING!("RUNNING test_simple_game_loop");
+
+        unsafe { 
+            game_ffi::create_game_window(title, WINDOW.width, WINDOW.height); 
+        }
+
+        let text = C_STRING!("hello window");
+        TEXT_RENDER!( text, 0.0, 20.0, 100.0, 255.0, 0.0, 0.0);
+        
+        // Main loop
+        START_WINDOW_AND_GAME_LOOP!(LOOP_SLEEP_MS, {});
+    } 
 }
+
 
 

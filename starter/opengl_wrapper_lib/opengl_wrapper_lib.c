@@ -1,12 +1,15 @@
 #include <GLFW/glfw3.h>
 #include <stdlib.h>
 #include "opengl_wrapper_lib.h"
-
 // Global variable for the GLFW window
 GLFWwindow* window;
 
 // Function to create a game window
 void create_game_window(const char *title, int width, int height) {
+    int argc = 0;
+    char * argv = "test_game";
+    glutInit(&argc, argv);
+
     if (!glfwInit()) {
         exit(EXIT_FAILURE);
     }
@@ -92,4 +95,27 @@ int get_key(GLFWwindow* window, int key) {
 // Function to get the window pointer
 GLFWwindow* get_window() {
     return window;
+}
+
+// Function to draw a text using GLUT. glutinit must be called before hand (from claud ai)
+void renderText(const char* text, float x, float y, float scale, float r, float g, float b) {
+    glPushMatrix();
+    glLoadIdentity();
+    
+    // Set position
+    glTranslatef(x, y, 0);
+    glScalef(scale, scale, 1.0f);
+    
+    // Set color
+    glColor3f(r, g, b);
+    
+    // Enable bitmap rendering
+    glRasterPos2f(0, 0);
+    
+    // Render each character
+    for (const char* c = text; *c != '\0'; c++) {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
+    }
+    
+    glPopMatrix();
 }

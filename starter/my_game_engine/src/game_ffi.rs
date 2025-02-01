@@ -52,4 +52,6 @@ pub fn get_key(window: *mut c_void, key: i32) -> i32;
 // // Function to get the window pointer
 pub fn get_window() -> *mut c_void ;
 
+pub fn renderText(text: * const c_char, x: f32, y: f32, scale:f32,  r:f32,  g:f32,  b:f32);
+
 }

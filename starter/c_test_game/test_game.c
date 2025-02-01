@@ -1,6 +1,7 @@
 #include "../opengl_wrapper_lib/opengl_wrapper_lib.h"
 
 int main() {
+
     // Create the game window
     create_game_window("C Test Game", 800, 600);
 
@@ -17,6 +18,8 @@ int main() {
         // Render the sprite
         render_sprite(sprite);
         render_sprite(sprite2);
+
+        renderText("Hello", 10.0f, 20.0f, 100,  255, 0, 0);
 
         // Update the game window
         update_game_window();

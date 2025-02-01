@@ -2,6 +2,7 @@
 #define OPENGL_WRAPPER_LIB_H
 // #include "../glfw-3.4/include/GLFW/glfw3.h"
 #include <GLFW/glfw3.h>
+#include <GL/glut.h>
 
 // Structure to represent a sprite
 typedef struct {
@@ -37,5 +38,7 @@ int get_key(GLFWwindow* window, int key);
 
 // Function to get the window pointer
 GLFWwindow* get_window();
+
+void renderText(const char* text, float x, float y, float scale, float r, float g, float b);
 
 #endif // OPENGL_WRAPPER_LIB_H

@@ -30,9 +30,6 @@ pub trait Movement {
 
     // Grow the snake
     fn grow(&mut self);
-
-    // Shrink from the tail end
-    fn shrink(&mut self);
 }
 
 
@@ -40,10 +37,10 @@ impl Snake {
     // Public Methods
     pub fn new(window: Window, x: f32, y: f32, width: i32, height: i32, r: i32, g: i32, b:i32) -> Snake {
         let sprite: *mut game_ffi::Sprite;
-        unsafe {
-            sprite = SPAWN_SPRITE!(false, x, y, width, height, r, g, b);
-        }
-        Snake{ direction: Direction::RIGHT, speed: 1, stride: 2 as f32, body: VecDeque::from([ sprite ]), window: window }
+        
+        sprite = SPAWN_SPRITE!(false, x, y, width, height, r, g, b);
+        
+        Snake{ direction: Direction::RIGHT, speed: 1, stride: 1.0 as f32, body: VecDeque::from([ sprite ]), window: window }
     }
 
     pub fn render(&self){
@@ -63,33 +60,30 @@ impl Snake {
 
     /// Check whether use changed the snake's direction, and return the new location of the head node
     fn update_direction(&mut self) {
-        unsafe {
-            ON_KEY_PRESS!(game_ffi::GLFW_KEY_LEFT, {
-                self.direction = Direction::LEFT;
-            });
+        ON_KEY_PRESS!(game_ffi::GLFW_KEY_LEFT, {
+            self.direction = Direction::LEFT;
+        });
 
-            ON_KEY_PRESS!(game_ffi::GLFW_KEY_RIGHT, {
-                self.direction = Direction::RIGHT;
-            });
+        ON_KEY_PRESS!(game_ffi::GLFW_KEY_RIGHT, {
+            self.direction = Direction::RIGHT;
+        });
 
-            ON_KEY_PRESS!(game_ffi::GLFW_KEY_UP, {
-                self.direction = Direction::UP;
-            });
+        ON_KEY_PRESS!(game_ffi::GLFW_KEY_UP, {
+            self.direction = Direction::UP;
+        });
 
-            ON_KEY_PRESS!(game_ffi::GLFW_KEY_DOWN, {
-                self.direction = Direction::DOWN;
-            });
-        }
+        ON_KEY_PRESS!(game_ffi::GLFW_KEY_DOWN, {
+            self.direction = Direction::DOWN;
+        });
     }
 
     /// create and append a new head to the snake
     fn move_snake(&mut self, grow: bool) {
 
-        for _ in 0..2 as i32 {
+        for _ in 0..3 as i32 {
             let sprite: *mut game_ffi::Sprite = *self.body.front().expect("Empty head");
             let new_head = match self.direction {
                 Direction::LEFT => { 
-                    // let new_x = if SPRITE_X!(sprite) < -self.window.sprite_side as f32 { self.window.width as f32} else {SPRITE_X!(sprite)- 1.0 * self.speed };
                     let new_x = GO_LEFT!(sprite, self.window, self.stride);
                     DUPE_SPRITE!(sprite , new_x , SPRITE_Y!(sprite))
                 },
@@ -108,10 +102,9 @@ impl Snake {
             };   
             self.body.push_front(new_head);         
         
-        if !grow {
-            // self.body.drain((self.body.len() - self.speed as usize)..);
-            self.body.pop_back();
-        }
+            if !grow {
+                self.body.pop_back();
+            }
         }
     }
 
@@ -132,10 +125,6 @@ impl Movement for Snake {
         // self.speed += 1;
         self.move_snake(true);
         println!("Snake size: {} - speed:{} - stride: {}",self.body.len(), self.speed, self.stride);    
-    }
-
-    fn shrink(&mut self) {
-        self.body.pop_back();
     }
 }
 
