@@ -22,6 +22,8 @@ pub struct Snake {
 
     direction: Direction,
     window: Window,
+
+    shadow: bool, // Snake does not die
 }
 
 pub trait Movement {
@@ -35,12 +37,12 @@ pub trait Movement {
 
 impl Snake {
     // Public Methods
-    pub fn new(window: Window, x: f32, y: f32, width: i32, height: i32, r: i32, g: i32, b:i32) -> Snake {
+    pub fn new(shadow: bool, window: Window, x: f32, y: f32, width: i32, height: i32, r: i32, g: i32, b:i32) -> Snake {
         let sprite: *mut game_ffi::Sprite;
         
         sprite = SPAWN_SPRITE!(false, x, y, width, height, r, g, b);
         
-        Snake{ direction: Direction::RIGHT, speed: 1, stride: 1.0 as f32, body: VecDeque::from([ sprite ]), window: window }
+        Snake{ shadow: shadow, direction: Direction::RIGHT, speed: 1, stride: 1.0 as f32, body: VecDeque::from([ sprite ]), window: window }
     }
 
     pub fn render(&self){
@@ -56,6 +58,9 @@ impl Snake {
         self.body.front()
     }
 
+    pub fn shadow(&self) -> bool {
+        self.shadow
+    }
     // Private Methods
 
     /// Check whether use changed the snake's direction, and return the new location of the head node

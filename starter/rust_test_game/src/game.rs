@@ -174,8 +174,8 @@ impl Game {
                     },
                     None => { vec![] }
                 };
-                if !food_consumed.is_empty() {                
-                    if food_consumed.iter().filter(|food| food.food_type == FoodType::Bad).count() != 0  {
+                if !food_consumed.is_empty() {
+                    if !snake.shadow() && food_consumed.iter().filter(|food| food.food_type == FoodType::Bad).count() != 0  {
                         // bad food eaten, die!
                         dead_snake = Some(snake.head().expect("Head not found!"));
                         break;
