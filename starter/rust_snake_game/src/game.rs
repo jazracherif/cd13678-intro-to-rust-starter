@@ -1,3 +1,12 @@
+//! Snake `game` module
+//! 
+//! This module sets up a Snake game. It can manage multiple snakes of different types
+//! and at the same time.
+//! 
+//! At creation, the game instance will spawn a background thread to handle remote request for data.
+//! 
+//! This module also takes care of rendering both snakes and food and check for any game end conditions
+
 use crossbeam_channel::unbounded;
 use my_game_engine::C_STRING;
 use std::ffi::CString;
@@ -15,20 +24,27 @@ use crate::snake::{Snake, SnakeKind, SnakeMovement};
 use my_game_engine::game_ffi;
 use my_game_engine::{
     SPAWN_SPRITE, SPRITE_ATTR, SPRITE_HEIGHT, SPRITE_WIDTH, SPRITE_X, SPRITE_Y, TEXT_RENDER,
+    CLEAR_SCREEN
 };
 
-const FOOD_UPDATE_EVERY: time::Duration = time::Duration::from_millis(500);
-const FOOD_EXPIRES_IN: time::Duration = time::Duration::from_secs(100);
 use core::cmp::PartialEq;
 
+/// Food request will be emitteed at this frequency
+const FOOD_UPDATE_EVERY: time::Duration = time::Duration::from_millis(500);
+/// Food will remain visible on the screen for this duration
+const FOOD_EXPIRES_IN: time::Duration = time::Duration::from_secs(100);
+/// whether to use simulated sprite generation or actually go over the network
 const REMOTE_SPRITE_FETCH_DEBUG: bool = true;
 
+/// Bad food kill a snake
 #[derive(PartialEq, Clone)]
 enum FoodType {
     Good,
     Bad,
 }
 
+/// Each food item has an expiry time, after which it will 
+/// disappear from the screen.
 #[derive(PartialEq, Clone)]
 pub struct Food {
     sprite: *mut game_ffi::Sprite,
@@ -36,7 +52,7 @@ pub struct Food {
     food_type: FoodType,
 }
 
-/// Check whether sprite 2 overlaps sprite 1
+/// This macro check whether two sprite overlap
 macro_rules! CHECK_SPRITE_OVERLAP {
     ($s1:expr, $s2:expr) => {{
         let mut inside: bool = false;
@@ -68,18 +84,26 @@ macro_rules! CHECK_SPRITE_OVERLAP {
     }};
 }
 
+/// The main game structure
 pub struct Game {
-    snakes: Vec<Snake>, // can be accessed by multiple threads
-    food: Vec<Food>,    // these will be populated by background app
+    /// All the snakes crawling in the game
+    snakes: Vec<Snake>,
+    /// Tracks all food items fetched and visible on the game window
+    food: Vec<Food>,
+    /// Game will emit new food request based on how long it has been since the last fetch
     last_food_fetched: time::Instant,
+    /// Whether the game is runnin
     running: Arc<Mutex<bool>>,
+    /// Communication channels to the background sprite fetching threads
     channels: (
         crossbeam_channel::Sender<i32>,
         crossbeam_channel::Receiver<SpriteData>,
     ),
+    /// Current user score
     score: i32,
 }
 
+/// background spawned thread function to invoke remote sprite request
 fn remote_sprite_fetch(
     thread_sender: crossbeam_channel::Sender<SpriteData>,
     thread_receiver: crossbeam_channel::Receiver<i32>,
@@ -111,6 +135,8 @@ fn remote_sprite_fetch(
     }
 }
 
+/// Debug version of `remote_sprite_fetch`. This is enabled through the 
+/// REMOTE_SPRITE_FETCH_DEBUG flag
 fn debug_remote_sprite_fetch(
     thread_sender: crossbeam_channel::Sender<SpriteData>,
     thread_receiver: crossbeam_channel::Receiver<i32>,
@@ -160,9 +186,8 @@ fn debug_remote_sprite_fetch(
 }
 
 impl Game {
+    /// Create a new game
     pub fn new(snakes: Vec<Snake>, food: Vec<Food>) -> Game {
-        // setup background thread for network requests
-
         let (sender_main, receiver_remote) = unbounded(); // one way from main to background
         let (sender_remote, receiver_main) = unbounded(); // one way from backgroun to main
 
@@ -201,10 +226,10 @@ impl Game {
         game
     }
 
+    /// Render the next step of the game. This will update internal state related to snake
+    /// and food and render the window. It should be called once at every step in the game loop
     pub fn render(&mut self) {
-        unsafe {
-            game_ffi::clear_screen();
-        }
+        CLEAR_SCREEN!();
 
         match self.render_snakes() {
             Err(_e) => self.die(),
@@ -213,7 +238,6 @@ impl Game {
 
         self.render_food();
 
-        // Render Score
         self.render_score();
     }
 

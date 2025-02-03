@@ -1,11 +1,20 @@
-//! main.rs
+//! Snake
 //!
-//! Main entry point for the Snake Game
-//!
-//!
+//! The Snake Game consists of a user controlled snake moving around a window frame
+//! looking for food to eate. The goal is to score as many point as possible by eating good 
+//! food. Bad food (color RED) eaten results in a game over.
+//! 
+//! As currently setup, the user's controlled snake is accompanied by a buddy snake, which
+//! moves in the same direction and can also eat food. This snake doesn't die when eating bad
+//! food and can thus be used as a helper. A third kind of snake is deployed that moves autonomously
+//! across the window, creating a bit of distraction to the user. This snake also doesn't die.
+//! 
+//! Games can be restarted when a snake dies by pressing the `space` bar. A top left scrore box
+//! shows the current score from eating food, counted those eaten by both the user and the buddy
+//! snake
 
 use my_game_engine::game_ffi;
-use my_game_engine::{C_STRING, ON_KEY_PRESS, START_WINDOW_AND_GAME_LOOP, TEXT_RENDER, TICK};
+use my_game_engine::{C_STRING, ON_KEY_PRESS, START_WINDOW_AND_GAME_LOOP, TEXT_RENDER, TICK, CREATE_GAME};
 use remote::SpriteData;
 
 use std::ffi::CString;
@@ -29,6 +38,7 @@ const SPRIDE_SIDE: i32 = 25;
 const LOOP_SLEEP_MS: time::Duration = time::Duration::from_millis(10);
 const GAME_OVER_FLASH_EVERY_MS: time::Duration = time::Duration::from_millis(1000);
 
+#[doc(hidden)]
 fn render_game_over_message() {
     static mut RED: bool = true;
     let score_text = C_STRING!("!! GAME OVER !! (space to restart)");
@@ -47,6 +57,7 @@ fn render_game_over_message() {
     }
 }
 
+/// Main loop where all game events are handled
 fn game_main_loop(game: &mut Game) {
     START_WINDOW_AND_GAME_LOOP!(LOOP_SLEEP_MS, {
         if game.running() {
@@ -58,6 +69,7 @@ fn game_main_loop(game: &mut Game) {
     });
 }
 
+/// Handle the game over loop to allow restart
 fn game_over_loop() -> bool {
     let mut restart: bool = false;
     let mut time = time::Instant::now();
@@ -80,6 +92,7 @@ fn game_over_loop() -> bool {
     return restart;
 }
 
+/// Create several snakes that will be used in the game
 fn create_snakes(snakes: &mut Vec<Snake>, initial_sprite: &SpriteData) {
     // Create soome snakes
     let user_snake = Snake::new(
@@ -135,15 +148,15 @@ fn create_snakes(snakes: &mut Vec<Snake>, initial_sprite: &SpriteData) {
     snakes.push(autonomous_snake);
 }
 
+/// Main entrypoint for the program.
+///  
+/// Launches the game loop as well as the game over
+/// loop and takes care of allowing users to restart the game if they lost.
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     let initial_sprite = remote::request_sprite().await;
 
-    let title = C_STRING!("Snake Game");
-
-    unsafe {
-        game_ffi::create_game_window(title, WINDOW_WIDTH, WINDOW_HEIGHT);
-    }
+    CREATE_GAME!(C_STRING!("Snake Game"), WINDOW_WIDTH, WINDOW_HEIGHT);
 
     loop {
         println!("NEW GAME!");

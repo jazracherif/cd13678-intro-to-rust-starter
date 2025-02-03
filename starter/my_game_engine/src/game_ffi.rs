@@ -1,3 +1,7 @@
+//! game_ffi.rs
+//! 
+//! This file contains all `C` bindings to access openCl and glfw library 
+//! in Rust.
 use std::ffi::c_void;
 use std::os::raw::{c_char, c_int};
 

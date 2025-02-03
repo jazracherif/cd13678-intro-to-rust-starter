@@ -1,12 +1,12 @@
 pub mod game_ffi;
 pub mod game_macros;
 
-use std::ffi::CString;
-use std::{thread, time};
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::ffi::CString;
+    use std::{thread, time};
 
     const LOOP_SLEEP_MS: time::Duration = time::Duration::from_millis(10);
 
@@ -26,12 +26,7 @@ mod tests {
     #[test]
     #[ignore]
     fn test_simple_game_loop() {
-        let title = C_STRING!("RUNNING test_simple_game_loop");
-
-        unsafe {
-            game_ffi::create_game_window(title, WINDOW.width, WINDOW.height);
-        }
-
+        CREATE_GAME!(C_STRING!("RUNNING test_simple_game_loop"), WINDOW.width, WINDOW.height);
         // Main loop
         START_WINDOW_AND_GAME_LOOP!(LOOP_SLEEP_MS, {});
     }
@@ -43,11 +38,8 @@ mod tests {
     #[test]
     #[ignore]
     fn test_sprite_rendering() {
-        let title = C_STRING!("RUNNING test_sprite_rendering");
+        CREATE_GAME!(C_STRING!("RUNNING test_sprite_rendering"), WINDOW.width, WINDOW.height);
 
-        unsafe {
-            game_ffi::create_game_window(title, WINDOW.width, WINDOW.height);
-        }
         // Create a sprite
         SPAWN_SPRITE!(
             true,
@@ -67,14 +59,11 @@ mod tests {
     // Same as test_sprite_rendering but flicker between two colors
     #[test]
     #[ignore]
-    fn test_sprite_flicker() {
-        let title = C_STRING!("RUNNING test_sprite_flicker");
+    fn test_sprite_flicker() {    
+        CREATE_GAME!(C_STRING!("RUNNING test_sprite_flicker"), WINDOW.width, WINDOW.height);
 
-        let mut red = true;
+        let mut red: bool = true;
 
-        unsafe {
-            game_ffi::create_game_window(title, WINDOW.width, WINDOW.height);
-        }
         // Create a sprite
         let sprite = SPAWN_SPRITE!(
             true,
@@ -111,13 +100,10 @@ mod tests {
     ///  until the window closed.
     #[test]
     #[ignore]
-    fn test_screen_clearing() {
-        let title: *mut u8 = C_STRING!("RUNNING: test_screen_clearing");
-        let switch_sprite_in_ms = time::Duration::from_millis(500);
+    fn test_screen_clearing() {        
+        CREATE_GAME!(C_STRING!("RUNNING test_screen_clearing"), WINDOW.width, WINDOW.height);
 
-        unsafe {
-            game_ffi::create_game_window(title, WINDOW.width, WINDOW.height);
-        }
+        let switch_sprite_in_ms = time::Duration::from_millis(500);
 
         let sprite_red = SPAWN_SPRITE!(
             true,
@@ -171,11 +157,8 @@ mod tests {
     #[test]
     #[ignore]
     fn test_key_presses() {
-        let title: *mut u8 = C_STRING!("RUNNING: test_key_presses - [ PRESS LEFT + RIGHT]");
+        CREATE_GAME!(C_STRING!("RUNNING test_key_presses - [ PRESS LEFT + RIGHT]"), WINDOW.width, WINDOW.height);
 
-        unsafe {
-            game_ffi::create_game_window(title, WINDOW.width, WINDOW.height);
-        }
         // Create a sprite
         SPAWN_SPRITE!(
             true,
@@ -217,11 +200,7 @@ mod tests {
     #[test]
     #[ignore]
     fn test_sprite_position_update() {
-        let title: *mut u8 = C_STRING!("RUNNING: test_sprite_position_update - [MOVE AROUND]");
-
-        unsafe {
-            game_ffi::create_game_window(title, WINDOW.width, WINDOW.height);
-        }
+        CREATE_GAME!(C_STRING!("RUNNING test_sprite_position_update - [MOVE AROUND]"), WINDOW.width, WINDOW.height);
 
         // Create a sprite
         let sprite = SPAWN_SPRITE!(
@@ -262,11 +241,7 @@ mod tests {
     #[test]
     #[ignore]
     fn test_loop_with_text() {
-        let title = C_STRING!("RUNNING test_simple_game_loop_with_text");
-
-        unsafe {
-            game_ffi::create_game_window(title, WINDOW.width, WINDOW.height);
-        }
+        CREATE_GAME!(C_STRING!("RUNNING test_simple_game_loop_with_text"), WINDOW.width, WINDOW.height);
 
         let text = C_STRING!("hello window");
         TEXT_RENDER!(text, 0.0, 20.0, 100.0, 255.0, 0.0, 0.0);
