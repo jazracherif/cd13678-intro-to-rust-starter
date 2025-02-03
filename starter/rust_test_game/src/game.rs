@@ -11,7 +11,7 @@ const SPRIDE_SIDE   : i32 = 25; // TODO: merge with the one in main.rs
 use crate::remote;
 use crate::remote::SpriteData;
 use crate::snake::{self, Snake};
-use snake::Movement;
+use snake::SnakeMovement;
 
 use my_game_engine::game_ffi;
 use my_game_engine::{SPAWN_SPRITE, SPRITE_X, SPRITE_Y, SPRITE_ATTR, SPRITE_HEIGHT, SPRITE_WIDTH, TEXT_RENDER};
@@ -72,7 +72,7 @@ pub struct Game{
 }
 
 impl Game {
-    pub fn create_all(snakes: Vec<Snake>, food: Vec<Food>) -> Game {
+    pub fn new(snakes: Vec<Snake>, food: Vec<Food>) -> Game {
         // setup background thread for network requests
 
         let (sender_main, receiver_remote) = unbounded(); // one way from main to background
@@ -128,10 +128,6 @@ impl Game {
         game
     }
 
-    pub fn create_snakes(snakes: Vec<Snake>) -> Game {
-        Game::create_all(snakes, Vec::new())
-    }
-
     pub fn render(&mut self){
         unsafe {
             game_ffi::clear_screen();
@@ -163,38 +159,48 @@ impl Game {
 
     fn render_snakes(&mut self){
         let mut dead_snake: Option<&*mut game_ffi::Sprite> = None;
-        {
-            for snake in self.snakes.iter_mut() {
-                snake.crawl();
-                // check if we encountered food
-                let food_consumed: Vec<Food> =  match snake.head() {
-                    Some(head) => {     
-                        self.food.iter().cloned()
-                            .filter(|food| CHECK_SPRITE_OVERLAP!(food.sprite, *head)).collect::<Vec<Food>>()                              
-                    },
-                    None => { vec![] }
-                };
-                if !food_consumed.is_empty() {
-                    if !snake.shadow() && food_consumed.iter().filter(|food| food.food_type == FoodType::Bad).count() != 0  {
-                        // bad food eaten, die!
-                        dead_snake = Some(snake.head().expect("Head not found!"));
-                        break;
-                    }
+                
+        for snake in self.snakes.iter_mut() {
+            snake.crawl();
 
-                    self.score += food_consumed.len() as i32;
-                    snake.grow();
+            // check if snake has encountered food
+            let food_consumed: Vec<Food> =  match snake.head() {
+                Some(head) => {     
+                    self.food.iter().cloned()
+                        .filter(|food| CHECK_SPRITE_OVERLAP!(food.sprite, *head)).collect::<Vec<Food>>()                              
+                },
+                None => { vec![] }
+            };
 
-                    // remove food items
-                    self.food.retain(|food| !food_consumed.contains(&food));
-                    println!("food eaten! remaining food {}", self.food.len());
+            // consume the food, good or band, and possibly get a reward
+            if !food_consumed.is_empty() {
+                if snake.dies_from_bad_food() && 
+                        food_consumed.iter().filter(|food| food.food_type == FoodType::Bad).count() != 0  {
+                    // bad food eaten, die!
+                    dead_snake = Some(snake.head().expect("Head not found!"));
+                    break;
                 }
-                snake.render(); 
+
+                if snake.is_owned_by_user() {
+                    self.score += food_consumed.len() as i32;
+                }
+
+                snake.grow();
+
+                // remove food items
+                self.food.retain(|food| !food_consumed.contains(&food));
+                println!("food eaten! remaining food {}", self.food.len());
             }
+
+            // render the snake on the screen
+            snake.render(); 
         }
         
+        // Check whether dead snake condition has been hit
         match dead_snake {
             Some(&head_sprite) => {
                 self.stop();
+                // draw the head in white
                 SPAWN_SPRITE!(true, 
                             SPRITE_X!(head_sprite), 
                             SPRITE_Y!(head_sprite),
