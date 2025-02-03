@@ -7,8 +7,9 @@ GLFWwindow* window;
 // Function to create a game window
 void create_game_window(const char *title, int width, int height) {
     int argc = 0;
-    char * argv = "test_game";
-    glutInit(&argc, argv);
+    char *argv = "test_game";
+
+    glutInit(&argc, &argv);
 
     if (!glfwInit()) {
         exit(EXIT_FAILURE);

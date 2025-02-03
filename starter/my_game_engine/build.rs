@@ -9,5 +9,4 @@ fn main() {
     println!("cargo::rustc-link-lib=glfw");
     println!("cargo::rustc-link-lib=GL");
     println!("cargo::rustc-link-lib=glut");
-
 }
