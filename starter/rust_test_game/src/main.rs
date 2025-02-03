@@ -158,10 +158,6 @@ async fn main() -> Result<(), Error> {
 
         // Game Over Loop
         if !game_over_loop() {
-            if game.running() {
-                // cleanup
-                game.stop();
-            }
             break;
         }
     }

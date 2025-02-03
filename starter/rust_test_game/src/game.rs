@@ -4,9 +4,8 @@ use std::ffi::CString;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time;
-use tokio::net::tcp::ReuniteError;
 
-// use rand::prelude::*; // DEBUG
+use rand::prelude::*;
 const SPRIDE_SIDE: i32 = 25; // TODO: merge with the one in main.rs
 
 use crate::remote;
@@ -21,6 +20,8 @@ use my_game_engine::{
 const FOOD_UPDATE_EVERY: time::Duration = time::Duration::from_millis(500);
 const FOOD_EXPIRES_IN: time::Duration = time::Duration::from_secs(100);
 use core::cmp::PartialEq;
+
+const REMOTE_SPRITE_FETCH_DEBUG: bool = true;
 
 #[derive(PartialEq, Clone)]
 enum FoodType {
@@ -79,6 +80,85 @@ pub struct Game {
     score: i32,
 }
 
+fn remote_sprite_fetch(
+    thread_sender: crossbeam_channel::Sender<SpriteData>,
+    thread_receiver: crossbeam_channel::Receiver<i32>,
+    running_clone: Arc<Mutex<bool>>,
+) {
+    println!("Starting Background thread to remotely fetch sprite");
+
+    let runtime: tokio::runtime::Runtime = tokio::runtime::Runtime::new().unwrap();
+
+    loop {
+        {
+            if *(running_clone.lock().unwrap()) == false {
+                // exit thread
+                println!("Game stopped, Closing Background sprite fetch thread");
+                drop(thread_sender);
+                break;
+            }
+        }
+        // listen to request, spawn a new async task for each new req from main
+        for _ in thread_receiver.try_iter() {
+            let thread_sender_clone = thread_sender.clone();
+            runtime.spawn(async move {
+                let sprite_data = remote::request_sprite().await;
+                // send it back to the main thread
+                let _ = thread_sender_clone.send(sprite_data);
+            });
+        }
+        std::thread::sleep(time::Duration::from_millis(10));
+    }
+}
+
+fn debug_remote_sprite_fetch(
+    thread_sender: crossbeam_channel::Sender<SpriteData>,
+    thread_receiver: crossbeam_channel::Receiver<i32>,
+    running_clone: Arc<Mutex<bool>>,
+) {
+    println!("Starting Background thread to fetch sprite (DEBUG)");
+    let runtime: tokio::runtime::Runtime = tokio::runtime::Runtime::new().unwrap();
+
+    loop {
+        {
+            if *(running_clone.lock().unwrap()) == false {
+                // exit thread
+                println!("Game stopped, Closing Background sprite fetch thread (DEBUG)");
+                drop(thread_sender);
+                break;
+            }
+        }
+
+        // listen to request, spawn a new async task for each new req from main
+        for _ in thread_receiver.try_iter() {
+            let thread_sender_clone = thread_sender.clone();
+            runtime.spawn(async move {
+                let mut rng = rand::rng();
+                let nums: Vec<i32> = (1..400).collect();
+                let color: Vec<i32> = (1..255).collect();
+
+                let sprite_data = SpriteData {
+                    x: *nums.choose(&mut rng).unwrap() as f32,
+                    y: *nums.choose(&mut rng).unwrap() as f32,
+                    width: 25,
+                    height: 25,
+                    r: *color.choose(&mut rng).unwrap(),
+                    g: *color.choose(&mut rng).unwrap(),
+                    b: *color.choose(&mut rng).unwrap(),
+                };
+                // simulate long fetch request
+                let sleep_time_sec: Vec<u64> = (1..5).collect();
+                std::thread::sleep(time::Duration::from_secs(
+                    *sleep_time_sec.choose(&mut rng).unwrap(),
+                ));
+                // send back to main
+                let _ = thread_sender_clone.send(sprite_data);
+            });
+        }
+        std::thread::sleep(time::Duration::from_millis(10));
+    }
+}
+
 impl Game {
     pub fn new(snakes: Vec<Snake>, food: Vec<Food>) -> Game {
         // setup background thread for network requests
@@ -105,33 +185,18 @@ impl Game {
            is handled via an async task, so that multiple network request may be
            serviced at the same time.
         */
-        thread::spawn(move || {
-            // let mut rng = rand::rng(); // DEBUG
-            // let nums: Vec<i32> = (1..400).collect(); // DEBUG
-
-            let runtime = tokio::runtime::Runtime::new().unwrap();
-
-            loop {
-                if *(running_clone.lock().unwrap()) == false {
-                    // exit thread
-                    println!("Game not running, Closing thread");
-                    drop(thread_sender);
-                    break;
-                }
-                // listen to request, spawn a new async task for each new req from main
-                for _ in thread_receiver.iter() {
-                    // let result: SpriteData = SpriteData{x: *nums.choose(&mut rng).unwrap() as f32,
-                    // y: *nums.choose(&mut rng).unwrap() as f32, width: 25, height:25, r:255, g:0, b:0 }; // DEBUG
-                    let thread_sender_clone = thread_sender.clone();
-                    runtime.spawn(runtime.spawn(async move {
-                        let sprite_data = remote::request_sprite().await;
-                        // send it back to the main thread
-                        let _ = thread_sender_clone.send(sprite_data);
-                    }));
-                }
-                std::thread::sleep(time::Duration::from_millis(10));
+        match REMOTE_SPRITE_FETCH_DEBUG {
+            false => {
+                thread::spawn(move || {
+                    remote_sprite_fetch(thread_sender, thread_receiver, running_clone)
+                });
             }
-        });
+            true => {
+                thread::spawn(move || {
+                    debug_remote_sprite_fetch(thread_sender, thread_receiver, running_clone)
+                });
+            }
+        }
 
         game
     }
@@ -306,5 +371,12 @@ impl Game {
         println!("Request 1 more food item");
         let sender = &self.channels.0;
         let _ = sender.send(1);
+    }
+}
+
+impl Drop for Game {
+    fn drop(&mut self) {
+        println!("drop called");
+        self.stop();
     }
 }
