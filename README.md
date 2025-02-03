@@ -1,8 +1,8 @@
 # The Snake Game Engine with Rust, built from the Ground Up (Udacity Intro to Rust)
 
-![readme_image_assets/snake_game.jpg](snake game 1)
+![readme_image_assets/snake_game.jpg](readme_image_assets/snake_game.jpg)
 
-![readme_image_assets/snake_game2.jpg](snake game 1)
+![readme_image_assets/snake_game2.jpg](readme_image_assets/snake_game2.jpg)
 
 This repository contain a rust implementation of the Snake Game. 
 
