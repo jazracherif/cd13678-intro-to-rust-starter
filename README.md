@@ -1,14 +1,14 @@
-# Building a Game Engine with Rust from the Ground Up
+# The Snake Game Engine with Rust, built from the Ground Up (Udacity Intro to Rust)
 
-This repository serves as the starting point for building a simple yet functional game engine using Rust. The project is designed to help you apply the concepts and skills you've learned throughout the Rust course. By completing this project, you'll gain hands-on experience with Rust's advanced features, including multi-threading, macros, and interoperability with C code.
+![readme_image_assets/snake_game.jpg](snake game 1)
+
+![readme_image_assets/snake_game2.jpg](snake game 1)
+
+This repository contain a rust implementation of the Snake Game. 
 
 ## Getting Started
 
-When working on this project, you can choose between utilizing Udacity's VM environment or setting it all up on your local machine. If you prefer to use the Udacity VM, you can skip the local environment prerequisite steps and jump straight to the project instructions.
-
-### Local environment prerequisites
-
-While this project has no specific dependencies on any system, it was built on a Unix-based machine. So, if you're on Windows, I'd recommend using the Windows Subsystem for Linux (WSL), so all instructions here directly apply to your system.  
+### Setup in Unix Environment
 
 For this project, you'll need to have Rust installed in your machine. If you haven't installed Rust yet, you can do so with:
 
@@ -16,17 +16,12 @@ For this project, you'll need to have Rust installed in your machine. If you hav
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
-Also, because we are dealing with C code in this project, you'll need to have a C compiler installed on your machine. You can install the `build-essential` package, which includes the GNU C Compiler (GCC) and other necessary tools:
+Also, because we are dealing with C code in this project, you'll need to have a C compiler installed on your machine. You can install the `build-essential` package, which includes the GNU C Compiler (GCC) and other necessary tools. You'll need to have `GLFW` installed in your machine. GLFW is a C library that will be the foundation of our game engine. Finally `Glut` is also used for text rendering on the screen. 
+
+All these dependencies can be installed via the makefile `setup` rule
 
 ```bash
-sudo apt update
-sudo apt install build-essential
-```
-
-Finally, you'll need to have GLFW installed in your machine. GLFW is a C library that will be the foundation of our game engine. You can install it with:
-
-```bash
-sudo apt install libglfw3 libglfw3-dev
+make setup
 ```
 
 ### Running the Test C Game
@@ -34,8 +29,7 @@ sudo apt install libglfw3 libglfw3-dev
 To start with your project, clone this repository to your local machine:
 
 ```bash
-git clone https://github.com/udacity/intro-to-rust-starter.git
-# or, git clone git@github.com:udacity/intro-to-rust-starter.git
+git clone git@github.com:jazracherif/cd13678-intro-to-rust-starter.git
 ```
 
 To ensure you are set up correctly, you can run the test C game that comes with this project. You can build and run the test game with:
@@ -49,11 +43,12 @@ You should see the following pop-up window:
 
 ![readme_image_assets/img.png](readme_image_assets/img.png)
 
-### Starting the Rust Game Engine
+### Rust Projects
 
-With this done, we are ready to start creating our game engine project. Inside the `starter` folder, create a new Rust library project called `my_game_engine` (or whatever name you prefer), and then refer to the project instructions in the Udacity website to start building your game engine.
+There are two rust project in this repo. One is the `my_game_engine` library, and provide basic game macros and several tests for the library.
 
-> Note: If you choose another name for your engine, you must update the references to `my_game_engine` in the `starter` folder's `Makefile` to reflect the new name.
+The other is the `rust_snake_game` binary, the actual snake game that can be played by running `cargo run` inside that project. The game will spawn several snake, one of which is the user controlled snake, one is a buddy follower, and a third is an automous snake. Food will be spawned now and then, some poisonous (Red color) and other edible. The more edible food is eaten, the higher the score. Enjoy!
+
 
 ## License
 
