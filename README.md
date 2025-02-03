@@ -2,7 +2,7 @@
 
 ![readme_image_assets/snake_game.jpg](readme_image_assets/snake_game.jpg)
 
-![readme_image_assets/snake_game2.jpg](readme_image_assets/snake_game2.jpg)
+![readme_image_assets/snake_game2.jpg](readme_image_assets/snake_game2.png)
 
 This repository contain a rust implementation of the Snake Game. 
 
