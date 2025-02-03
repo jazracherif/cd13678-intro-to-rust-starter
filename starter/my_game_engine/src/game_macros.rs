@@ -1,3 +1,7 @@
+//! game_macros.rs
+//! 
+//! The main macros for game management
+
 /// Create a sprite and rended it on the screen
 #[macro_export]
 macro_rules! SPAWN_SPRITE {
