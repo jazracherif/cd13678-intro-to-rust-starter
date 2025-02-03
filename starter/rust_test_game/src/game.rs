@@ -4,14 +4,14 @@ use std::ffi::CString;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time;
+use tokio::net::tcp::ReuniteError;
 
 // use rand::prelude::*; // DEBUG
 const SPRIDE_SIDE: i32 = 25; // TODO: merge with the one in main.rs
 
 use crate::remote;
 use crate::remote::SpriteData;
-use crate::snake::{self, Snake};
-use snake::SnakeMovement;
+use crate::snake::{Snake, SnakeKind, SnakeMovement};
 
 use my_game_engine::game_ffi;
 use my_game_engine::{
@@ -140,7 +140,11 @@ impl Game {
         unsafe {
             game_ffi::clear_screen();
         }
-        self.render_snakes();
+
+        match self.render_snakes() {
+            Err(_e) => self.die(),
+            Ok(_) => {}
+        }
 
         self.render_food();
 
@@ -160,13 +164,38 @@ impl Game {
         *running = false;
     }
 
+    pub fn die(&mut self) {
+        self.stop();
+
+        // draw the user's head in white
+        let user_snake_head = self
+            .snakes
+            .iter()
+            .filter(|snake| snake.kind == SnakeKind::USER)
+            .collect::<Vec<&Snake>>()
+            .first()
+            .unwrap()
+            .head()
+            .expect("Can't find snake head!");
+
+        SPAWN_SPRITE!(
+            true,
+            SPRITE_X!(user_snake_head.sprite),
+            SPRITE_Y!(user_snake_head.sprite),
+            SPRITE_WIDTH!(user_snake_head.sprite),
+            SPRITE_HEIGHT!(user_snake_head.sprite),
+            250,
+            255,
+            255
+        );
+    }
+
     pub fn running(&self) -> bool {
         *self.running.lock().unwrap()
     }
 
-    fn render_snakes(&mut self) {
-        let mut dead_snake: Option<&*mut game_ffi::Sprite> = None;
-
+    /// Render Snake and return whether game should continue or not
+    fn render_snakes(&mut self) -> Result<(), String> {
         for snake in self.snakes.iter_mut() {
             snake.crawl();
 
@@ -176,7 +205,7 @@ impl Game {
                     .food
                     .iter()
                     .cloned()
-                    .filter(|food| CHECK_SPRITE_OVERLAP!(food.sprite, *head))
+                    .filter(|food| CHECK_SPRITE_OVERLAP!(food.sprite, head.sprite))
                     .collect::<Vec<Food>>(),
                 None => {
                     vec![]
@@ -193,8 +222,7 @@ impl Game {
                         != 0
                 {
                     // bad food eaten, die!
-                    dead_snake = Some(snake.head().expect("Head not found!"));
-                    break;
+                    return Err(String::from("Snake At bad food!"));
                 }
 
                 if snake.is_owned_by_user() {
@@ -212,24 +240,7 @@ impl Game {
             snake.render();
         }
 
-        // Check whether dead snake condition has been hit
-        match dead_snake {
-            Some(&head_sprite) => {
-                self.stop();
-                // draw the head in white
-                SPAWN_SPRITE!(
-                    true,
-                    SPRITE_X!(head_sprite),
-                    SPRITE_Y!(head_sprite),
-                    SPRITE_WIDTH!(head_sprite),
-                    SPRITE_HEIGHT!(head_sprite),
-                    250,
-                    255,
-                    255
-                );
-            }
-            None => {}
-        };
+        Ok(())
     }
 
     fn render_food(&mut self) {

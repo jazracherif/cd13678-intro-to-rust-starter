@@ -36,9 +36,25 @@ pub enum SnakeKind {
     AUTONOMOUS,
 }
 
+pub struct GameSprite {
+    pub sprite: *mut game_ffi::Sprite,
+}
+
+impl GameSprite {
+    fn from_sprite(sprite: *mut game_ffi::Sprite) -> GameSprite {
+        GameSprite { sprite: sprite }
+    }
+
+    fn render(&self) {
+        unsafe {
+            game_ffi::render_sprite(self.sprite);
+        }
+    }
+}
+
 pub struct Snake {
     /// the snake's body
-    body: VecDeque<*mut game_ffi::Sprite>,
+    body: VecDeque<GameSprite>,
     /// the number of body parts to move at each step
     speed: i32,
     /// by how many pixels to move the head of the snake
@@ -48,7 +64,7 @@ pub struct Snake {
     /// the game's window
     window: Window,
     /// whether this snake is a shadow buddy or not.
-    kind: SnakeKind,
+    pub kind: SnakeKind,
     /// Random generator helps with deciding the direction of the autonomous snakes
     rng: rand::rngs::ThreadRng,
 }
@@ -74,30 +90,26 @@ impl Snake {
         g: i32,
         b: i32,
     ) -> Snake {
-        let sprite: *mut game_ffi::Sprite;
-
-        sprite = SPAWN_SPRITE!(false, x, y, width, height, r, g, b);
-
+        let snake_body_item =
+            GameSprite::from_sprite(SPAWN_SPRITE!(false, x, y, width, height, r, g, b));
         Snake {
             kind: kind,
             direction: Direction::RIGHT,
             speed: SNAKE_BODY_DISPLACEMENT_SPEED_PER_ITERATION,
             stride: INITIAL_SNAKE_GROWTH_SPEED,
-            body: VecDeque::from([sprite]),
+            body: VecDeque::from([snake_body_item]),
             window: window,
             rng: rand::rng(),
         }
     }
 
     pub fn render(&self) {
-        unsafe {
-            for sprite in self.body.iter() {
-                game_ffi::render_sprite(*sprite);
-            }
+        for snake_body_item in self.body.iter() {
+            snake_body_item.render();
         }
     }
 
-    pub fn head(&self) -> Option<&*mut game_ffi::Sprite> {
+    pub fn head(&self) -> Option<&GameSprite> {
         self.body.front()
     }
 
@@ -155,7 +167,7 @@ impl Snake {
     /// Move the snake forward, delete the back of the snake if no growth is expected
     fn move_forward(&mut self, grow: bool) {
         for _ in 0..self.speed {
-            let sprite: *mut game_ffi::Sprite = *self.body.front().expect("Empty head");
+            let sprite: *mut game_ffi::Sprite = self.body.front().expect("Empty head").sprite;
             let new_head = match self.direction {
                 Direction::LEFT => {
                     let new_x = GO_LEFT!(sprite, self.window, self.stride);
@@ -174,7 +186,7 @@ impl Snake {
                     DUPE_SPRITE!(sprite, SPRITE_X!(sprite), new_y)
                 }
             };
-            self.body.push_front(new_head);
+            self.body.push_front(GameSprite::from_sprite(new_head));
 
             if !grow {
                 self.body.pop_back();
