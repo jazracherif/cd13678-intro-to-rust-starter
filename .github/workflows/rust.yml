@@ -11,16 +11,17 @@ env:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
+    defaults:
+      run:
+        working-directory: ./starter
     steps:
     - uses: actions/checkout@v4
-    - name: setup
-      run: cd starter ; make setup
-    - name: c test
+    - name: Setup environment
+      run: make setup
+    - name: Build c test
       run: make build-c
-    - name: build game engine library
+    - name: Build game engine library
       run: cargo build --manifest-path ./my_game_engine/Cargo.toml
-    - name: build snake game binary
+    - name: Build snake game binary
       run: cargo build --manifest-path ./rust_snake_game/Cargo.toml
