@@ -36,7 +36,7 @@ test-rust:
 
 
 .PHONY: test-rust-more
-test-rust-more: test-rust
+test-rust-all: test-rust
 	@echo "Running Rust Tests Serially..."
 	cargo test --manifest-path ./my_game_engine/Cargo.toml tests::test_sprite_flicker -- --nocapture --ignored
 
