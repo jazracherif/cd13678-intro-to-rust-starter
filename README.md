@@ -32,7 +32,7 @@ git clone git@github.com:jazracherif/cd13678-intro-to-rust-starter.git
 
 ### Rust Projects
 
-There are two rust project in this repo. One is the `my_game_engine` library, and provide FFI bindings to OpenCL, GLFW, and GLUT libraries written in C as well as basic game macros and several tests for the library.
+There are two rust project in this repo. One is the `my_game_engine` library, and provide FFI bindings to OpenGL, GLFW, and GLUT libraries written in C as well as basic game macros and several tests for the library.
 
 Use the `starter/MakeFile` to run the basic C test code in `c_test_game/test_game.c` and verify your installation:
 
