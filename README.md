@@ -58,13 +58,9 @@ cd rust_snake_game
 cargo run
 ```
 
-The game will spawn several snake, one of which is the user controlled snake, one is a buddy follower, and a third is an automous snake. Food will be spawned now and then, some poisonous (Red color) and other edible. Score increases as more edible food is eaten. Enjoy!
+The game will spawn several snake, one of which is the user controlled snake, one is a buddy follower, and a third is an automous snake. Food will be spawned now and then, some poisonous (Red color) and other edible. Score increases as more edible food is eaten. 
 
-
-![readme_image_assets/snake_game.jpg](readme_image_assets/snake_game.jpg)
-
-![readme_image_assets/snake_game2.jpg](readme_image_assets/snake_game2.png)
-
+Enjoy!
 
 ## License
 
