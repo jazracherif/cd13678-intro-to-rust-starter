@@ -1,8 +1,8 @@
-# The Snake Game Engine with Rust, built from the Ground Up (Udacity Intro to Rust)
+# The Snake Game Engine with Rust
 
 <img src="./readme_image_assets/game.gif"/>
 
-This repository contain a rust implementation of the Snake Game. 
+This repository contain a rust implementation of the **Snake** Game. Basic code was provide by Udacity for their [Introduction to Rust](https://www.udacity.com/course/intro-to-rust--cd13678) course
 
 ## Getting Started
 
@@ -30,28 +30,21 @@ To start with your project, clone this repository to your local machine:
 git clone git@github.com:jazracherif/cd13678-intro-to-rust-starter.git
 ```
 
-To ensure you are set up correctly, you can run the test C game that comes with this project. You can build and run the test game with:
-
-```bash
-cd intro-to-rust-starter/starter
-make run-c
-```
-
-You should see the following pop-up window:
-
-![readme_image_assets/img.png](readme_image_assets/img.png)
-
 ### Rust Projects
 
 There are two rust project in this repo. One is the `my_game_engine` library, and provide FFI bindings to OpenCL, GLFW, and GLUT libraries written in C as well as basic game macros and several tests for the library.
 
-Use the `starte/MakeFile` to run the basic C test code in `c_test_game/test_game.c`:
+Use the `starter/MakeFile` to run the basic C test code in `c_test_game/test_game.c` and verify your installation:
+
+```bash
+cd starter
+```
 
 ```bash
 make run-c
 ```
 
-This command runs all tests written in the rust library crate `my_game_engine`:
+When modifying this `my_game_engine` library crate, add tests in `my_game_engine/lib.rs` and run them through the make file:
 
 ```bash
 make test-rust-all
@@ -59,11 +52,12 @@ make test-rust-all
 
 ### Rust Game
 
-The other rust create is the `rust_snake_game` binary, the actual snake game that you can play!
+The other rust crate is the `rust_snake_game` binary, the actual snake game that you can play!
 
-To run the game, go to that directory and run:
+To run the game:
 
-```rust 
+```rust
+cd rust_snake_game
 cargo run
 ```
 
