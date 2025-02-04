@@ -16,7 +16,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 Also, because we are dealing with C code in this project, you'll need to have a C compiler installed on your machine. You can install the `build-essential` package, which includes the GNU C Compiler (GCC) and other necessary tools. You'll need to have `GLFW` installed in your machine. GLFW is a C library that will be the foundation of our game engine. Finally `Glut` is also used for text rendering on the screen. 
 
-All these dependencies can be installed via the makefile `setup` rule
+All these dependencies can be installed via the makefile `setup` rule from the `starter/MakeFile` makefile
 
 ```bash
 make setup
@@ -36,9 +36,6 @@ There are two rust project in this repo. One is the `my_game_engine` library, an
 
 Use the `starter/MakeFile` to run the basic C test code in `c_test_game/test_game.c` and verify your installation:
 
-```bash
-cd starter
-```
 
 ```bash
 make run-c
@@ -47,7 +44,7 @@ make run-c
 When modifying this `my_game_engine` library crate, add tests in `my_game_engine/lib.rs` and run them through the make file:
 
 ```bash
-make test-rust-all
+make test-rust
 ```
 
 ### Rust Game

@@ -10,8 +10,6 @@ TEST_GAME_DIR = ./c_test_game
 TEST_GAME_SRC = $(TEST_GAME_DIR)/test_game.c
 TEST_GAME_EXE = $(OUTPUT_DIR)/test_game_exe
 
-GLFW_LIB = ./glfw-3.4/lib-arm64/
-GLFW_HEADERS = ./glfw-3.4/include/
 
 .PHONY: build-c
 build-c:
@@ -33,11 +31,6 @@ test-rust:
 	cargo test --manifest-path ./my_game_engine/Cargo.toml tests::test_screen_clearing -- --nocapture --ignored
 	cargo test --manifest-path ./my_game_engine/Cargo.toml tests::test_key_presses -- --nocapture --ignored
 	cargo test --manifest-path ./my_game_engine/Cargo.toml tests::test_sprite_position_update -- --nocapture --ignored
-
-
-.PHONY: test-rust-more
-test-rust-all: test-rust
-	@echo "Running Rust Tests Serially..."
 	cargo test --manifest-path ./my_game_engine/Cargo.toml tests::test_sprite_flicker -- --nocapture --ignored
 
 .PHONY: setup
