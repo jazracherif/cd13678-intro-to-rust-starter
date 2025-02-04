@@ -1,0 +1,26 @@
+name: Rust
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: setup
+      run: cd starter ; make setup
+    - name: c test
+      run: make build-c
+    - name: build game engine library
+      run: cargo build --manifest-path ./my_game_engine/Cargo.toml
+    - name: build snake game binary
+      run: cargo build --manifest-path ./rust_snake_game/Cargo.toml
